@@ -1,0 +1,88 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<!-- Root element -->
+	<xs:element name="conf">
+		<xs:complexType>
+			<xs:sequence>
+				<!-- "file" elements : files affected by the OU's configuration 
+					   - The "path" attribute specifies the file name. This attribute must be
+					     unique among all the "file" elements.
+					   - The "plugin" attribute specifies the plugin to be used to regenerate the file.
+				-->	
+				<xs:element name="file" minOccurs="0" maxOccurs="unbounded">
+					<xs:complexType>
+						<xs:sequence>
+							<!-- "security" element : standard unix security attributes + ACL.
+							-->
+							<xs:element name="security" minOccurs="1" maxOccurs="1">
+								<xs:complexType>
+									<xs:sequence>
+										<!-- User and group IDs. If not specified, inherited from the last parent OU which
+											   specifies it or 0 (root) by default
+										-->
+										<xs:element name="uid" type="xs:nonNegativeInteger" minOccurs="0" maxOccurs="1"/>
+										<xs:element name="gid" type="xs:nonNegativeInteger" minOccurs="0" maxOccurs="1"/>
+										<!-- Standard Unix Permissions. If not specified, inherited from the last parent
+												 OU which specifies it or computed from current umask by default.
+												 See man chmod for more details.
+										-->
+										<xs:element name="us" type="xs:boolean" minOccurs="0" maxOccurs="1"/>
+										<xs:element name="gs" type="xs:boolean" minOccurs="0" maxOccurs="1"/>
+										<xs:element name="t" type="xs:boolean" minOccurs="0" maxOccurs="1"/>
+										<xs:element name="ur" type="xs:boolean" minOccurs="0" maxOccurs="1"/>
+										<xs:element name="uw" type="xs:boolean" minOccurs="0" maxOccurs="1"/>
+										<xs:element name="ux" type="xs:boolean" minOccurs="0" maxOccurs="1"/>
+										<xs:element name="gr" type="xs:boolean" minOccurs="0" maxOccurs="1"/>
+										<xs:element name="gw" type="xs:boolean" minOccurs="0" maxOccurs="1"/>
+										<xs:element name="gx" type="xs:boolean" minOccurs="0" maxOccurs="1"/>
+										<xs:element name="or" type="xs:boolean" minOccurs="0" maxOccurs="1"/>
+										<xs:element name="ow" type="xs:boolean" minOccurs="0" maxOccurs="1"/>
+										<xs:element name="ox" type="xs:boolean" minOccurs="0" maxOccurs="1"/>
+										<!-- ACL, as dumped by getfacl	-->
+										<xs:element name="acl" minOccurs="0" maxOccurs="1">
+											<xs:complexType>
+												<xs:sequence>
+													<!-- One "ace" element for each access control entry.
+															 The unique attribute "id" specifies the position in the list.
+													-->
+													<xs:element name="ace" minOccurs="1" maxOccurs="unbounded">
+														<xs:complexType>
+															<xs:simpleContent>
+																<xs:extension base="xs:string">
+																	<xs:attribute name="id" type="xs:nonNegativeInteger" use="required"/>
+																</xs:extension>
+															</xs:simpleContent>
+														</xs:complexType>
+													</xs:element>
+												</xs:sequence>
+											</xs:complexType>
+											<!-- Unicity of the "id" attribute -->
+											<xs:unique name="ace_id">
+												<xs:selector xpath="ace"/>
+												<xs:field xpath="@id"/>
+											</xs:unique>
+										</xs:element>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="description" minOccurs="1" maxOccurs="1">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:any minOccurs="0" maxOccurs="unbounded"/>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+						<xs:attribute name="path" type="xs:string" use="required"/>
+						<xs:attribute name="plugin" type="xs:string" use="required"/>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+		</xs:complexType>
+		<!-- Unicity of the "path" attribute -->
+		<xs:unique name="file_path">
+			<xs:selector xpath="file"/>
+			<xs:field xpath="@path"/>
+		</xs:unique>
+	</xs:element>
+</xs:schema>
