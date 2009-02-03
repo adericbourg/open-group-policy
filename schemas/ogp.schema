@@ -21,25 +21,24 @@ attributeType ( 1.3.6.1.4.1.7135.1.3.136.1.2
 	SINGLE-VALUE
 	SYNTAX 1.3.6.1.4.1.1466.115.121.1.8 ) # Certificate
 
-attributeType ( 1.3.6.1.4.1.7135.1.3.136.1.3
-	NAME 'ogpDescription'
-	DESC 'Machine or OU description'
-	EQUALITY caseIgnoreMatch
-	SUBSTR caseIgnoreSubstringsMatch
-	SINGLE-VALUE
-	SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 ) # Directory String
-
-objectClass ( 1.3.6.1.4.1.7135.1.3.136.2.1
-	NAME 'ogpou'
-	DESC 'OGP Organizational Unit Object'
-	SUP organizationalUnit
-	MUST ogpXmlConfig 
-	MAY ogpDescription )
-
 objectClass ( 1.3.6.1.4.1.7135.1.3.136.2.2
-	NAME 'ogpcomputer'
+	NAME 'ogpComputer'
 	DESC 'OGP Machine description'
 	SUP computer
 	MUST ogpMachineCertificate
-	MAY ogpDescription )
+	MAY description )
 
+objectclass ( 2.5.6.5
+	NAME 'organizationalUnit'
+	SUP top
+	STRUCTURAL
+	MUST ou
+	MAY (c $ l $ st $ street $ searchGuide $ businessCategory $
+		postalAddress $ postalCode $ postOfficeBox $
+		physicalDeliveryOfficeName $ telephoneNumber $ telexNumber $
+		teletexTerminalIdentifier $ facsimileTelephoneNumber $ x121Address $
+		internationalISDNNumber $ registeredAddress $ destinationIndicator $
+		preferredDeliveryMethod $ seeAlso $ userPassword $ co $ countryCode $
+		desktopProfile $ defaultGroup $ managedBy $ uPNSuffixes $ gPLink $
+		gPOptions $ thumbnailLogo $
+		ogpXmlConfig $ description ) )
