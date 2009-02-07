@@ -2,29 +2,29 @@
 # -*- coding: utf-8 -*
 
 class ogpcore:
-	__init__(self, host, port, dn=none, passwd=none, cert=none):
+	def	__init__(self, host, port, dn=None, passwd=None, cert=None):
 		pass
 
-	createOU(dn, others=none):
+	def createOU(dn, others=None):
 		pass
 
-	createMachine(dn, others=none):
+	def createMachine(dn, others=None):
 		pass
 
-	push(file, ou, overwrite):
+	def push(file, ou, overwrite):
 		pass
 
-	pull(ou, recursive):
+	def pull(ou, recursive):
 		pass
 
-	pullFile(ou, file, recursive):
+	def pullFile(ou, file, recursive):
 		pass
 
-	getFileList(ou, recursive):
+	def getFileList(ou, recursive):
 		pass
 
-	build(ou, recursive):
+	def build(ou, recursive):
 		pass
 
-	buildFile(ou, recusrive):
+	def buildFile(ou, recusrive):
 		pass
