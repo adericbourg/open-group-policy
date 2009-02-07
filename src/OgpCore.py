@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*
 
-class ogpcore:
+class OgpCore:
 	def	__init__(self, host, port, dn=None, passwd=None, cert=None):
 		pass
 
