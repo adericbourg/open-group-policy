@@ -1,4 +1,8 @@
 # See http://code.activestate.com/recipes/266468/ for further details
+#
+# Note for further versions: http://docs.python.org/library/abc.html
+# Abstract base classes will be supported in Python 2.6
+
 
 class AbstractMethod (object):
 	"""Defines a class to create abstract methods
