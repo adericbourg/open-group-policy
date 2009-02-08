@@ -32,7 +32,7 @@ class Metaclass (type):
 		abstractmethods.sort()
 		setattr(cls, '__abstractmethods__', abstractmethods)
 
-	def new(self, cls):
+	def new(self, cls, *args, **kwargs):
 		"""Allocator for class cls
 
 		@param self: Class object for which an instance should be
