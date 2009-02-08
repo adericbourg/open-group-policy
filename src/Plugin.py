@@ -1,8 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*
 
-import Metaclass
-import AbstractMethod
+from Metaclass import Metaclass
+from AbstractMethod import AbstractMethod
 
 class Plugin (object):
 	__metaclass__ = Metaclass
@@ -14,7 +14,7 @@ class Plugin (object):
 	# Abstract methods
 	mergeDescription = AbstractMethod('mergeDescription')
 	toString = AbstractMethod('toString')
-	toXML = AbstractMethode('toXML')
+	toXML = AbstractMethod('toXML')
 
 	def getName():
 		pass
