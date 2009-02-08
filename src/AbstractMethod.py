@@ -8,15 +8,15 @@ class AbstractMethod (object):
 	"""Defines a class to create abstract methods
 
 	@example:
-	class Foo:
-	foo = AbstractMethod('foo')
+		class Foo:
+			foo = AbstractMethod('foo')
 	"""
 
 	def __init__(self, func):
 		"""Constructor
 
 		@params func: name of the function (used when raising an
-		exception).
+			exception).
 		@type func: str
 		"""
 		self._function = func
