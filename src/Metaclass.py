@@ -1,5 +1,7 @@
 # For more informations, see http://code.activestate.com/recipes/266468/
 
+from AbstractMethod import AbstractMethod
+
 class Metaclass (type):
 	
 	def __init__(cls, name, bases, *args, **kwargs):
