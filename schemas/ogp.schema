@@ -1,3 +1,11 @@
+#
+# Replacement classes for samba4-ad schema: added OGP attributes to 
+# computer and organizationalUnit classes. 
+#
+# OIDs: 1.3.6.1.4.1.7135.1.3.136.1 (attributes)
+#       1.3.6.1.4.1.7135.1.3.136.2 (classes)
+#
+
 attributeType ( 1.3.6.1.4.1.7135.1.3.136.1.1
         NAME 'oGPXMLConfig'
         DESC 'per OU XML configuration description'

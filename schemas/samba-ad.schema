@@ -1,3 +1,8 @@
+# 
+# Samba4 AD schema where computer and orghanizationalUnit
+# classes were removed (replaced by OGP classes in ogp.schema)
+#
+
 attributetype (
   1.2.840.113556.1.4.722
   NAME 'otherIpPhone'
