@@ -17,7 +17,7 @@ class Plugin (object):
 	toXML = AbstractMethod('toXML')
 
 	def getName():
-		pass
+		return ""
 
 	def mergeFile(parentFile, childFile):
 		pass
