@@ -48,13 +48,13 @@ class OgpCore:
 		attrs[OgpLDAPConsts.ATTR_CONFIG] = OgpLDAPConsts.VALUE_CONFIG
 		self.__add(dn, attrs)
 
-	def push(self, file, dn, overwrite):
+	def push(self, plugin, dn, overwrite):
 		pass
 
 	def pull(self, ou, recursive):
 		pass
 
-	def pullFile(self, ou, file, recursive):
+	def pullPlugin(self, ou, plugin, recursive):
 		pass
 
 	def getFileList(self, ou, recursive):
@@ -63,6 +63,6 @@ class OgpCore:
 	def build(self, ou, recursive):
 		pass
 
-	def buildFile(self, ou, recusrive):
+	def buildFile(self, ou, recursive):
 		pass
 
