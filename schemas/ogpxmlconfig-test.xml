@@ -1,0 +1,101 @@
+<!-- XML file for ogpxmlconfig.xsd's tests
+		 First plugin entry is clean, th second one must raise (using xmllint) :
+		 - ogpxmlconfig-test.xml:50: element acl: Schemas validity error : Element 'acl': Missing child element(s). Expected is ( ace ).
+		 - ogpxmlconfig-test.xml:83: element ur: Schemas validity error : Element 'ur': 'dsffffdkdsjf' is not a valid value of the atomic type 'xs:boolean'.
+		 - ogpxmlconfig-test.xml:91: element ace: Schemas validity error : Element 'ace': Duplicate key-sequence ['0'] in unique identity-constraint 'ace_id'.
+		 - ogpxmlconfig-test.xml:93: element t: Schemas validity error : Element 't': This element is not expected. Expected is one of ( gr, gw, gx, or, ow, ox ).
+		 - ogpxmlconfig-test.xml:79: element file: Schemas validity error : Element 'file': Duplicate key-sequence ['enabled-sites'] in unique identity-constraint 'file_name'.
+		 - ogpxmlconfig-test.xml:59: element plugin: Schemas validity error : Element 'plugin': Duplicate key-sequence ['apache'] in unique identity-constraint 'plugin_name'.
+-->
+
+<ogp>
+	<plugin name="apache">
+		<conf>
+			<dfsjkfdk hjkfhksd=",b,nb,">jdshfkdsfk</dfsjkfdk>
+		</conf>
+		<files>
+			<file name="enabled-sites">
+				<security>
+					<uid>0</uid> <!-- User ID -->
+					<gid>0</gid> <!-- Group ID -->
+					<ur>1</ur> <!-- User read -->
+					<uw>1</uw> <!-- User write -->
+					<ux>0</ux> <!-- User execute -->
+					<us>0</us> <!-- SetUID -->
+					<gs>0</gs> <!-- SetGID -->
+					<t>0</t> <!-- Sticky bit -->
+				</security>
+				<conf>
+					<sfhksdks sdfhfksd="khjkhkh" />
+				</conf>
+			</file>
+		</files>
+	</plugin>
+	
+	<plugin name="test">
+		<conf>
+			<dfsjkfdk hjkfhksd=",b,nb,">jdshfkdsfk</dfsjkfdk>
+		</conf>
+		<files>
+			<file name="enabled-sites">
+				<security>
+					<uid>0</uid> <!-- User ID -->
+					<gid>0</gid> <!-- Group ID -->
+					<ur>1</ur> <!-- User read -->
+					<uw>1</uw> <!-- User write -->
+					<ux>0</ux> <!-- User execute -->
+					<us>0</us> <!-- SetUID -->
+					<gs>0</gs> <!-- SetGID -->
+					<t>0</t> <!-- Sticky bit -->
+					<acl />
+				</security>
+				<conf>
+					<sfhksdks sdfhfksd="khjkhkh" />
+				</conf>
+			</file>
+		</files>
+	</plugin>
+	
+	<plugin name="apache">
+		<conf>
+			<dfsjkfdk hjkfhksd=",b,nb,">jdshfkdsfk</dfsjkfdk>
+		</conf>
+		<files>
+			<file name="enabled-sites">
+				<security>
+					<uid>0</uid> <!-- User ID -->
+					<gid>0</gid> <!-- Group ID -->
+					<ur>1</ur> <!-- User read -->
+					<uw>1</uw> <!-- User write -->
+					<ux>0</ux> <!-- User execute -->
+					<us>0</us> <!-- SetUID -->
+					<gs>0</gs> <!-- SetGID -->
+					<t>0</t> <!-- Sticky bit -->
+				</security>
+				<conf>
+					<sfhksdks sdfhfksd="khjkhkh" />
+				</conf>
+			</file>
+			<file name="enabled-sites">
+				<security>
+					<uid>0</uid> <!-- User ID -->
+					<gid>0</gid> <!-- Group ID -->
+					<ur>dsffffdkdsjf</ur> <!-- User read -->
+					<uw>1</uw> <!-- User write -->
+					<ux>0</ux> <!-- User execute -->
+					<us>0</us> <!-- SetUID -->
+					<gs>0</gs> <!-- SetGID -->
+					<t>0</t> <!-- Sticky bit -->
+					<acl>
+						<ace id="0">sdfhsdkfhkshks</ace>
+						<ace id="0">sdfsdjfksdfhf</ace>
+					</acl>
+					<t>1</t>
+				</security>
+				<conf>
+					<sfhksdks sdfhfksd="khjkhkh" />
+				</conf>
+			</file>
+		</files>
+	</plugin>
+</ogp>
