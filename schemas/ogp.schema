@@ -29,29 +29,17 @@ attributeType (1.3.6.1.4.1.7135.1.3.136.1.3
 
 objectclass (
   1.3.6.1.4.1.7135.1.3.136.2.2
-  NAME 'organizationalUnit'
-  SUP top
+  NAME 'oGPOrganizationalUnit'
+  SUP organizationalUnit
   STRUCTURAL
-  MUST ( ou )
-  MAY ( x121Address $ telexNumber $ desktopProfile $ businessCategory $ st $
-   preferredDeliveryMethod $ thumbnailLogo $ gPLink $ physicalDeliveryOfficeName $ userPassword $
-   teletexTerminalIdentifier $ l $ postalCode $ facsimileTelephoneNumber $ seeAlso $
-   defaultGroup $ uPNSuffixes $ msCOM-UserPartitionSetLink $ telephoneNumber $ searchGuide $
-   internationalISDNNumber $ countryCode $ postalAddress $ destinationIndicator $ co $
-   registeredAddress $ street $ managedBy $ c $ gPOptions $
-   postOfficeBox $ description $ oGPXMLConfig $ oGPSOA)
+  MAY ( description $ oGPXMLConfig $ oGPSOA )
   )
 
 objectclass (
   1.3.6.1.4.1.7135.1.3.136.2.1
-  NAME 'computer'
-  SUP user
+  NAME 'oGPComputer'
+  SUP computer
   STRUCTURAL
-  MAY ( volumeCount $ operatingSystemHotfix $ managedBy $ dNSHostName $ physicalLocationObject $
-   netbootGUID $ cn $ netbootMirrorDataFile $ defaultLocalPolicyObject $ operatingSystem $
-   siteGUID $ msDS-AdditionalSamAccountName $ operatingSystemVersion $ machineRole $ rIDSetReferences $
-   netbootMachineFilePath $ location $ networkAddress $ catalogs $ operatingSystemServicePack $
-   msDS-AdditionalDnsHostName $ policyReplicationFlags $ localPolicyFlags $ netbootInitialization $ netbootSIFFile $ 
-   oGPXMLConfig $ oGPMachineCertificate $ description $ oGPSOA)
+  MAY ( oGPXMLConfig $ oGPMachineCertificate $ description $ oGPSOA )
   )
 

@@ -1,8 +1,3 @@
-# 
-# Samba4 AD schema where computer and orghanizationalUnit
-# classes were removed (replaced by OGP classes in ogp.schema)
-#
-
 attributetype (
   1.2.840.113556.1.4.722
   NAME 'otherIpPhone'
@@ -4209,6 +4204,18 @@ objectclass (
   )
 
 objectclass (
+  1.2.840.113556.1.3.30
+  NAME 'computer'
+  SUP user
+  STRUCTURAL
+  MAY ( volumeCount $ operatingSystemHotfix $ managedBy $ dNSHostName $ physicalLocationObject $
+   netbootGUID $ cn $ netbootMirrorDataFile $ defaultLocalPolicyObject $ operatingSystem $
+   siteGUID $ msDS-AdditionalSamAccountName $ operatingSystemVersion $ machineRole $ rIDSetReferences $
+   netbootMachineFilePath $ location $ networkAddress $ catalogs $ operatingSystemServicePack $
+   msDS-AdditionalDnsHostName $ policyReplicationFlags $ localPolicyFlags $ netbootInitialization $ netbootSIFFile )
+  )
+
+objectclass (
   1.2.840.113556.1.5.2
   NAME 'samDomainBase'
   SUP top
@@ -4347,6 +4354,21 @@ objectclass (
   MAY ( msDS-DnsRootAlias $ trustParent $ nETBIOSName $ superiorDNSRoot $ msDS-Behavior-Version $
    msDS-Replication-Notify-First-DSA-Delay $ Enabled $ rootTrust $ msDS-SDReferenceDomain $ msDS-NC-Replica-Locations $
    nTMixedDomain $ msDS-Replication-Notify-Subsequent-DSA-Delay )
+  )
+
+objectclass (
+  2.5.6.5
+  NAME 'organizationalUnit'
+  SUP top
+  STRUCTURAL
+  MUST ( ou )
+  MAY ( x121Address $ telexNumber $ desktopProfile $ businessCategory $ st $
+   preferredDeliveryMethod $ thumbnailLogo $ gPLink $ physicalDeliveryOfficeName $ userPassword $
+   teletexTerminalIdentifier $ l $ postalCode $ facsimileTelephoneNumber $ seeAlso $
+   defaultGroup $ uPNSuffixes $ msCOM-UserPartitionSetLink $ telephoneNumber $ searchGuide $
+   internationalISDNNumber $ countryCode $ postalAddress $ destinationIndicator $ co $
+   registeredAddress $ street $ managedBy $ c $ gPOptions $
+   postOfficeBox )
   )
 
 objectclass (
