@@ -9,12 +9,12 @@ class OgpCore(object):
 
 	__instance = None
 
-	def __init__(self, uri, dn=None, passwd=None, cert=None):
+	def __init__(self, uri, dn=None, passwd=None, certs=None):
 		""" Create singleton instance """
 		# Check whether we already have an instance
 		if OgpCore.__instance is None:
 			# Create and remember instance
-			OgpCore.__instance = OgpCore.__ogpcore(uri, dn, passwd, cert)
+			OgpCore.__instance = OgpCore.__ogpcore(uri, dn, passwd, certs)
 		# Store instance reference as the only member in the handle
 		self.__dict__['OgpCore__instance'] = OgpCore.__instance
 
@@ -26,16 +26,19 @@ class OgpCore(object):
 		""" Delegate access to implementation """
 		return setattr(self.__instance, attr, value)
 
+	def getInstance():
+		return OgpCore.__instance
+	getInstance = staticmethod(getInstance)
 	
 	class __ogpcore:
 
-		def	__init__(self, uri, dn=None, passwd=None, cert=None):
+		def	__init__(self, uri, dn=None, passwd=None, certs=None):
 			"""
 				Initlialize connection to LDAP server. 
 				uri: ldap://host:port
 				dn: usdr dn
 				passwd: user password
-				cert: path to cert file (.pem)
+				certs: path to cert file (.pem)
 			"""
 			self.l = ldap.initialize(uri)
 			self.l.simple_bind_s(dn, passwd)
@@ -51,9 +54,17 @@ class OgpCore(object):
 			attrs[OgpLDAPConsts.ATTR_CONFIG] = OgpLDAPConsts.VALUE_CONFIG
 			self.__add(dn, attrs) 
 
+		def deleteDN(self, dn):
+			#self.__delete(dn)
+			pass
+
+
 		def __add(self, dn, attrs):
 			ldif = modlist.addModlist(attrs)
 			self.l.add_s(dn,ldif)
+
+		def __delete(self, dn):
+			self.l.delete_s(dn)
 
 		def createMachine(self, dn, others={}):
 			attrs = others
@@ -70,20 +81,14 @@ class OgpCore(object):
 			attrs[OgpLDAPConsts.ATTR_CONFIG] = OgpLDAPConsts.VALUE_CONFIG
 			self.__add(dn, attrs)
 
-		def push(self, plugin, dn, overwrite):
+		def merge(self, parent, child):
 			pass
 
-		def pull(self, ou, recursive):
+		def xml2conf(self, xml, xslt):
+			return # TODO
+
+		def pullPluginConf(self, dn, pluginName, fullTree=False):
 			pass
 
-		def pullPlugin(self, ou, plugin, recursive):
-			pass
-
-		def getFileList(self, ou, recursive):
-			pass
-
-		def build(self, ou, recursive):
-			pass
-
-		def buildFile(self, ou, recursive):
+		def pushPluginConf(self, dn, conf):
 			pass
