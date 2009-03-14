@@ -4,7 +4,11 @@ from xml.dom.minidom import *
 import DomElementMethods
 
 obj = Element("test")
-print obj.getBlocking()  # get
-obj.setBlocking(True)    # set
-print obj.getBlocking()  # get
-
+a = Element("a")
+obj.appendChild(a)
+b = Element("b")
+obj.appendChild(b)
+a2 = Element("a")
+a.setAttribute("a","a")
+obj.appendChild(a2)
+a2.setAttribute("a","a")
