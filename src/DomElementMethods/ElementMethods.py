@@ -141,7 +141,7 @@ def setAttribute(self, name, value):
 		newattrs.append([name, value])
 		newattrs.sort()
 	else: # replace it !
-		for i, attr in enumerate:
+		for i, attr in enumerate(newattrs):
 			if attr[1] == name:
 				newattrs[i] = [name, value]
 				break
