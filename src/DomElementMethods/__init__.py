@@ -25,3 +25,5 @@ Element.insertBefore=insertBefore
 
 Element.__oldSetAttribute=Element.setAttribute
 Element.setAttribute=setAttribute
+
+Element.merge=merge

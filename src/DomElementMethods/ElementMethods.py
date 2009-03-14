@@ -155,3 +155,6 @@ def setAttribute(self, name, value):
 			if br.nodeType == Node.ELEMENT_NODE and not br.isSameNode(self) and br.tagName == self.tagName and br.getAttributes() == newattrs:
 				raise InvalidAccessErr
 	self.__oldSetAttribute(name, value)
+
+def merge(childPeer):
+	pass
