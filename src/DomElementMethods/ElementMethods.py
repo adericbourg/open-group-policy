@@ -5,6 +5,7 @@ from xml.dom.minidom import *
 from xml.dom import InvalidAccessErr
 
 ATTR_BLOCK="block"
+ATTR_ID="id"
 
 def getAttributes(self):
 	"""
@@ -148,7 +149,7 @@ def setAttribute(self, name, value):
 	
 	#check if no brother element has the future attribute set	
 	parent = self.parentNode
-	if parent != None and parent.nodeType == Node.ELEMENT_NODE:
+	if parent is not None and parent.nodeType == Node.ELEMENT_NODE:
 		brothers = parent.childNodes
 		for i in range(brothers.length):
 			br=brothers.item(i)
@@ -156,5 +157,70 @@ def setAttribute(self, name, value):
 				raise InvalidAccessErr
 	self.__oldSetAttribute(name, value)
 
-def merge(childPeer):
-	pass
+def merge(self, peer):
+	"""
+		Merges self with peer. peer is considered as the "child" conf (LDAP speaking), so that it has precendence on self.
+		See plugin documentation for further details on the algorithm
+	"""
+	#if self and peer are not exactly the same (i.e. same name and same attributes),
+	#raise InvalidAccessErr.
+	if self.tagName != peer.tagName or self.getAttributes() != peer.getAttributes():
+		raise InvalidAccessErr
+	
+	#Nodes must have same content. If not, raise InvalidAccessErr
+	if (self.getText() is None and peer.getText() is not None) or (self.getText() is not None and peer.getText() is None):
+		raise InvalidAccessErr
+
+	#First case : nodes contains Text
+	if self.getText() is not None:
+		self.setText(peer.getText())
+		return
+	
+	#Second Case : nodes contains nodes
+	self.reorder_ids(peer)
+	
+	selfCommon=dict()
+
+	peerNotCommon=[]
+	peerCommon=dict()
+
+	for i in range(self.childNodes.length):
+		selfE = self.childNodes.item(i)
+		for j in range(peer.childNodes.length):
+			peerE = peer.childNodes.item(j)
+			if selfE.tagName == peerE.tagName and selfE.getAttributes() == peerE.getAttributes():
+				selfCommon[[selfE.tagName, selfE.getAttributes()]] = selfE
+
+	for i in range(peer.childNodes.length):
+		peerE = peer.childNodes.item(i)
+		common = False
+		for j in range(self.childNodes.length):
+			selfE = self.childNodes.item(j)
+			if peerE.tagName == selfE.tagName and peerE.getAttributes() == selfE.getAttributes():
+				peerCommon[[peerE.tagName, peerE.getAttributes()]] = peerE
+				common = True
+		if not common:
+				peerNotCommon.append(peerE)
+	
+	#add peer children wich are not in common
+	for e in peerNotCommon:
+		self.appendChild(e.clone(deep))
+
+	#merge common children
+	for k, e in selfCommon.iteritems():
+		e.merge(peerCommon[k].clone(deep))
+
+
+def reorder_ids(self, peer):
+	peerMaxId = 0
+	if peer.hasChildNodes() and self.hasChildNodes:
+		for i in range(peer.childNodes.length):
+			e=peer.childNodes.item(i)
+			if e.nodeType == Node.ELEMENT_NODE and e.hasAttribute(ATTR_ID) and int(e.getAttribute("ATTR_ID")) > peerMaxId:
+				peerMaxId = int(e.getAttribute("ATTR_ID"))
+
+		for i in range(self.childNodes.length):
+			e=self.childNodes.item(i)
+			if e.nodeType == Node.ELEMENT_NODE and e.hasAttribute(ATTR_ID):
+				e.setAttribute(ATTR_ID, str(int(e.getAttribute("ATTR_ID")) + peerMaxId + 1))
+
