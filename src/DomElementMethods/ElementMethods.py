@@ -1,224 +1,200 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*
 
-from xml.dom.minidom import *
-from xml.dom import InvalidAccessErr
+from lxml.etree import *
+from copy import deepcopy
 
-ATTR_BLOCK="block"
-ATTR_ID="id"
+ATTR_BLOCK = "block"
+ATTR_ID = "id"
 
-def getAttributes(self):
-	"""
-		Returns a sorted array containing the element's attributes and their values but the 'block' attribute.
-		This provides a convenient way to test the equality beween two elements' attributes and values :
-		(e1.getAttributes() == e2.getAttributes) <=> Excluding the 'block' attribute, e1 and e2 have same attributes with same values.
-	"""
-	attrs=[]
-	if self.hasAttributes():
-		children=self.attributes
-		for i in range(children.length):
-			if children.item(i).name != ATTR_BLOCK:
-				attrs.append([children.item(i).name, self.getAttribute(children.item(i).name)])
-	attrs.sort()
-	return attrs
+class OgpElement(ElementBase):
+	
+	__text = ElementBase(self).text
+	def __getText(self):
+		return self.__text
+	def __setText(self, text):
+		self.delElements()
+		self.__text = text
+	text = property(__getText, __setText)
 
-def getBlocking(self):
-	"""
-		A more convenient way to access the 'block' special attribute.
-	"""
-	if (not self.hasAttribute(ATTR_BLOCK)):
-		return False
-	else:
-		return bool(self.getAttribute(ATTR_BLOCK))
+	def __getAttributes(self):
+		res = dict()
+		for key in self.attrib:
+			res[key] = self.attrib[key]
+		try:
+			del res[ATTR_BLOCK]
+		except:
+			pass
+		return res
+	attributes = property(__getAttributes)
 
-def setBlocking(self,blocking):
-	"""
-		Sets the 'block' special attribute.
-	"""
-	self.__oldSetAttribute(ATTR_BLOCK,blocking)
+	def __getBlocking(self):
+		"""
+			A more convenient way to access the 'block' special attribute.
+		"""
+		b = self.get(ATTR_BLOCK)
+		if b is None:
+			return False
+		else:
+			return bool(b)
 
-def getText(self):
-	"""
-		Returns the first (should be the only one) Text node's data
-	"""
-	if self.hasChildNodes():
-		children=self.childNodes
-		for i in range(children.length):
-			if children.item(i).nodeType == Node.TEXT_NODE:
-				return children.item(i).data
-	return None
+	def __setBlocking(self, blocking):
+		"""
+			Sets the 'block' special attribute.
+		"""
+		assert isinstance(blocking, bool)
+		if blocking:
+			self.attrib[ATTR_BLOCK] = str(blocking)
+		else:
+			try:
+				del self.attrib[ATTR_BLOCK]
+			except:
+				pass
+	blocking = property(__getBlocking, __setBlocking)
 
-def setText(self,text):
-	"""
-		Deletes every CDATASection or Text child and appends a new CDATASection containing the text.
-		Every Element child will be deleted by appendChild()
-	"""
-	self.delText()
-	textNode = Text()
-	textNode.data = text
-	self.appendChild(textNode)
+	def delElements(self):
+		"""
+			Removes any Text or CDATASection child
+		"""
+		for e in self:
+			self.remove(e)
 
-def appendText(self,text):
-	"""
-		Appends a new Text containing the text
-		Every Element child will be deleted by appendChild()
-	"""
-	textNode = Text()
-	textNode.data = text
-	self.appendChild(textNode)
-
-def delText(self):
-	"""
-		Removes any Text child
-	"""
-	if self.hasChildNodes():
-		children=self.childNodes
-		for i in range(children.length):
-			if children.item(i).nodeType == Node.TEXT_NODE:
-				self.removeChild(children.item(i))
-
-def delElements(self):
-	"""
-		Removes any Text or CDATASection child
-	"""
-	if self.hasChildNodes():
-		children=self.childNodes
-		for i in range(children.length):
-			if children.item(i).nodeType == Node.ELEMENT_NODE:
-				self.removeChild(children.item(i))
-
-def checkUnicity(self, elt):
-	"""
-		Checks if no child element has the same name and the same attributes,
-	"""
-	if self.hasChildNodes():
-		children=self.childNodes
-		for i in range(children.length):
-			if children.item(i).nodeType == Node.ELEMENT_NODE and children.item(i).tagName == elt.tagName and children.item(i).getAttributes() == elt.getAttributes():
+	def __checkUnicity(self, elt):
+		"""
+			Checks if no child element has the same name and the same attributes,
+		"""
+		assert isinstance(elt, OgpElement)
+		for e in self:
+			if e.tag == elt.tag and e.attributes == elt.attributes:
 				return False
-	return True
+		return True
 
-def appendChild(self, newChild):
-	"""
-		Works as the standard function, but :
-		- If newChild is an Element, checks unicity before adding, and deletes every Text or CDATASection
-		- If newChild is a Text , deletes every Element child, adds it and the normalize().
-	"""
-	if newChild.nodeType == Node.ELEMENT_NODE:
-		if (not self.__checkUnicity(newChild)):raise InvalidAccessErr
-		self.delText()
-		self.__oldAppendChild(newChild)
-	elif newChild.nodeType == Node.TEXT_NODE or newChild.nodeType == Node.CDATA_SECTION_NODE:
-		self.delElements()
-		self.__oldAppendChild(newChild)
-		self.normalize()
-	else:
-		self.__oldAppendChild(newChild)
+	def append(self, newChild):
+		"""
+			Works as the standard function, but :
+			- If newChild is an Element, checks unicity before adding, and deletes every Text or CDATASection
+			- If newChild is a Text , deletes every Element child, adds it and the normalize().
+		"""
+		assert isinstance(newChild, OgpElement)
+		if (not self.__checkUnicity(newChild)):raise OgpXmlError('append: element is not unique')
+		self.text = None
+		ElementBase.append(self, newChild)
 
-def insertBefore(self, newChild, refChild):
-	"""
-		Works as the standard function, but :
-		- If newChild is an Element, checks unicity before adding, and deletes every Text or CDATASection
-		- If newChild is a Text , deletes every Element child, adds it and the normalize().
-	"""
-	if newChild.nodeType == Node.ELEMENT_NODE:
-		if (not self.__checkUnicity(newChild)):raise InvalidAccessErr
-		self.delText()
-		self.__oldInsertBefore(newChild, refChild)
-	elif newChild.nodeType == Node.TEXT_NODE or newChild.nodeType == Node.CDATA_SECTION_NODE:
-		self.delElements()
-		self.__oldInsertBefore(newChild, refChild)
-		self.normalize()
-	else:
-		self.__oldInsertBefore(newChild, refChild)
+	def insert(self, index, newChild):
+		"""
+			Works as the standard function, but :
+			- If newChild is an Element, checks unicity before adding, and deletes every Text or CDATASection
+			- If newChild is a Text , deletes every Element child, adds it and the normalize().
+		"""
+		assert isinstance(newChild, OgpElement)
+		assert isinstance(index, int)
 
-def setAttribute(self, name, value):
+		if (not self.__checkUnicity(newChild)):raise OgpXmlError('insert: element is not unique')
+		self.text = None
+		ElementBase.insert(self, index, element)
 
-	#Computation of new attribute list
-	newattrs=self.getAttributes()
-	if not self.hasAttribute(name):
-		#if attribute doesn't exist yet, just add it
-		newattrs.append([name, value])
-		newattrs.sort()
-	else: # replace it !
-		for i, attr in enumerate(newattrs):
-			if attr[1] == name:
-				newattrs[i] = [name, value]
-				break
-	
-	#check if no brother element has the future attribute set	
-	parent = self.parentNode
-	if parent is not None and parent.nodeType == Node.ELEMENT_NODE:
-		brothers = parent.childNodes
-		for i in range(brothers.length):
-			br=brothers.item(i)
-			if br.nodeType == Node.ELEMENT_NODE and not br.isSameNode(self) and br.tagName == self.tagName and br.getAttributes() == newattrs:
-				raise InvalidAccessErr
-	self.__oldSetAttribute(name, value)
+	def extend(self, elements):
+		for element in elements:
+			assert isinstance(element, OgpElement)
+			if (not self.__checkUnicity(element)):raise OgpXmlError('extend: element is not unique')
+			ElementBase.append(self, element) 
 
-def merge(self, peer):
-	"""
-		Merges self with peer. peer is considered as the "child" conf (LDAP speaking), so that it has precendence on self.
-		See plugin documentation for further details on the algorithm
-	"""
-	#if self and peer are not exactly the same (i.e. same name and same attributes),
-	#raise InvalidAccessErr.
-	if self.tagName != peer.tagName or self.getAttributes() != peer.getAttributes():
-		raise InvalidAccessErr
-	
-	#Nodes must have same content. If not, raise InvalidAccessErr
-	if (self.getText() is None and peer.getText() is not None) or (self.getText() is not None and peer.getText() is None):
-		raise InvalidAccessErr
-
-	#First case : nodes contains Text
-	if self.getText() is not None:
-		self.setText(peer.getText())
-		return
-	else: #Second Case : nodes contains nodes
-		self.reorder_ids(peer)
+	def set(self, name, value):
+		assert isinstance(name, str)
+		assert isinstance(value, str)
+		#Computation of new attribute list
+		newattrs=self.attributes
+		newattrs[name] = value
 		
-		selfCommon=dict()
+		#check if no brother element has the future attribute set	
+		parent = self.getparent()
+		if parent is not None:
+			for br in parent:
+				if br is not self and br.tag == self.tag and br.attributes == newattrs:
+					raise OgpXmlError('set: element would no more be unique')
+		self.attrib[name] = value
 
-		peerNotCommon=[]
-		peerCommon=dict()
+	def merge(self, peer):
+		"""
+			Merges self with peer. peer is considered as the "child" conf (LDAP speaking), so that it has precendence on self.
+			See plugin documentation for further details on the algorithm
+		"""
+		assert isinstance(peer, OgpElement)
 
-		for i in range(self.childNodes.length):
-			selfE = self.childNodes.item(i)
-			for j in range(peer.childNodes.length):
-				peerE = peer.childNodes.item(j)
-				if selfE.tagName == peerE.tagName and selfE.getAttributes() == peerE.getAttributes():
-					selfCommon[[selfE.tagName, selfE.getAttributes()]] = selfE
-
-		for i in range(peer.childNodes.length):
-			peerE = peer.childNodes.item(i)
-			common = False
-			for j in range(self.childNodes.length):
-				selfE = self.childNodes.item(j)
-				if peerE.tagName == selfE.tagName and peerE.getAttributes() == selfE.getAttributes():
-					peerCommon[[peerE.tagName, peerE.getAttributes()]] = peerE
-					common = True
-			if not common:
-					peerNotCommon.append(peerE)
+		#if self and peer are not exactly the same (i.e. same name and same attributes),
+		#raise OgpXmlError.
+		if self.tag != peer.tag or self.attributes != peer.attributes:
+			raise OgpXmlError('merge: peer has not same name or attributes')
 		
-		#add peer children wich are not in common
-		for e in peerNotCommon:
-			self.appendChild(e.clone(deep))
+		#Nodes must have same content. If not, raise OgpXmlError
+		if not ((self.text is None) ^ (peer.text is not None)):
+			raise OgpXmlError('merge: peer has not same type of content')
 
-		#merge common children
-		for k, e in selfCommon.iteritems():
-			e.merge(peerCommon[k].clone(deep))
+		#if blocking, stop here
+		if self.blocking:return
+
+		#First case : nodes contains Text
+		if self.text is not None:
+			self.text = peer.text
+			return
+		else: #Second Case : nodes contains nodes
+			self.__reorder_ids(peer)
+			
+			selfCommon=dict()
+
+			peerNotCommon=[]
+			peerCommon=dict()
+
+			for selfE in self:
+				for peerE in peer:
+					if selfE.tag == peerE.tag and selfE.attributes == peerE.attributes:
+						selfCommon[(selfE.tag, str(selfE.attributes))] = selfE
+
+			for peerE in peer:
+				common = False
+				for selfE in self:
+					if peerE.tag == selfE.tag and peerE.attributes == selfE.attributes:
+						peerCommon[(peerE.tag, str(peerE.attributes))] = peerE
+						common = True
+				if not common:
+						peerNotCommon.append(peerE)
+			
+			#add peer children wich are not in common
+			for e in peerNotCommon:
+				self.append(deepcopy(e))
+
+			#merge common children
+			for k, e in selfCommon.iteritems():
+				e.merge(deepcopy(peerCommon[k]))
 
 
-def reorder_ids(self, peer):
-	peerMaxId = 0
-	if peer.hasChildNodes() and self.hasChildNodes:
-		for i in range(peer.childNodes.length):
-			e=peer.childNodes.item(i)
-			if e.nodeType == Node.ELEMENT_NODE and e.hasAttribute(ATTR_ID) and int(e.getAttribute(ATTR_ID)) > peerMaxId:
-				peerMaxId = int(e.getAttribute(ATTR_ID))
+	def __reorder_ids(self, peer):
+		assert isinstance(peer, OgpElement)
 
-		for i in range(self.childNodes.length):
-			e=self.childNodes.item(i)
-			if e.nodeType == Node.ELEMENT_NODE and e.hasAttribute(ATTR_ID):
-				e.setAttribute(ATTR_ID, str(int(e.getAttribute(ATTR_ID)) + peerMaxId + 1))
+		peerMaxId = 0
+		if len(peer) > 0 and len(self) > 0:
+			for e in peer:
+				id = e.get(ATTR_ID)
+				if id is not None and int(id) > peerMaxId:
+					peerMaxId = int(id)
+
+			for e in self:
+				id = e.get(ATTR_ID)
+				if id is not None:
+					e.set(ATTR_ID, str(int(id)) + peerMaxId + 1)
+
+	def toString(self):
+		return tostring(self)
+
+class OgpXmlError(Exception):
+	def __init__(self, value):
+		assert isinstance(value, str)
+		self.value = value
+	
+	def __str__(self):
+		return repr(self.value)
+
+class OgpElementClassLookup(PythonElementClassLookup):
+	def lookup(self, document, element):
+		return OgpElement # defined elsewhere
 
