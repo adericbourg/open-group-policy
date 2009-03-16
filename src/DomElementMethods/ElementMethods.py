@@ -8,14 +8,18 @@ ATTR_BLOCK = "block"
 ATTR_ID = "id"
 
 class OgpElement(ElementBase):
+	def __init(self, tag, attrib):
+		ElementBase.__init__(self, tag, attrib)
 	
-	__text = ElementBase(self).text
-	def __getText(self):
-		return self.__text
-	def __setText(self, text):
-		self.delElements()
-		self.__text = text
-	text = property(__getText, __setText)
+	def __setattr__(self, item, value):
+		if item == "text":
+			print "Deleting all subelements..."
+			self.delElements()
+		if item == "tail":
+			print "Tail must be none"
+			value = None
+		
+		ElementBase.__setattr__(self, item, value)
 
 	def __getAttributes(self):
 		res = dict()

@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*
-from lxml.etree import *
 from DomElementMethods import *
+from lxml.etree import *
 
 obj = Element("rootelement")
 obj2 = Element("rootelement")
