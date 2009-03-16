@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*
+
 from xml.dom.minidom import * 
 from ElementMethods import *
 

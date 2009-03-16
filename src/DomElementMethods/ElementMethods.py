@@ -63,7 +63,6 @@ def appendText(self,text):
 		Appends a new Text containing the text
 		Every Element child will be deleted by appendChild()
 	"""
-	self.delText()
 	textNode = Text()
 	textNode.data = text
 	self.appendChild(textNode)
@@ -175,40 +174,39 @@ def merge(self, peer):
 	if self.getText() is not None:
 		self.setText(peer.getText())
 		return
-	
-	#Second Case : nodes contains nodes
-	self.reorder_ids(peer)
-	
-	selfCommon=dict()
+	else: #Second Case : nodes contains nodes
+		self.reorder_ids(peer)
+		
+		selfCommon=dict()
 
-	peerNotCommon=[]
-	peerCommon=dict()
+		peerNotCommon=[]
+		peerCommon=dict()
 
-	for i in range(self.childNodes.length):
-		selfE = self.childNodes.item(i)
-		for j in range(peer.childNodes.length):
-			peerE = peer.childNodes.item(j)
-			if selfE.tagName == peerE.tagName and selfE.getAttributes() == peerE.getAttributes():
-				selfCommon[[selfE.tagName, selfE.getAttributes()]] = selfE
+		for i in range(self.childNodes.length):
+			selfE = self.childNodes.item(i)
+			for j in range(peer.childNodes.length):
+				peerE = peer.childNodes.item(j)
+				if selfE.tagName == peerE.tagName and selfE.getAttributes() == peerE.getAttributes():
+					selfCommon[[selfE.tagName, selfE.getAttributes()]] = selfE
 
-	for i in range(peer.childNodes.length):
-		peerE = peer.childNodes.item(i)
-		common = False
-		for j in range(self.childNodes.length):
-			selfE = self.childNodes.item(j)
-			if peerE.tagName == selfE.tagName and peerE.getAttributes() == selfE.getAttributes():
-				peerCommon[[peerE.tagName, peerE.getAttributes()]] = peerE
-				common = True
-		if not common:
-				peerNotCommon.append(peerE)
-	
-	#add peer children wich are not in common
-	for e in peerNotCommon:
-		self.appendChild(e.clone(deep))
+		for i in range(peer.childNodes.length):
+			peerE = peer.childNodes.item(i)
+			common = False
+			for j in range(self.childNodes.length):
+				selfE = self.childNodes.item(j)
+				if peerE.tagName == selfE.tagName and peerE.getAttributes() == selfE.getAttributes():
+					peerCommon[[peerE.tagName, peerE.getAttributes()]] = peerE
+					common = True
+			if not common:
+					peerNotCommon.append(peerE)
+		
+		#add peer children wich are not in common
+		for e in peerNotCommon:
+			self.appendChild(e.clone(deep))
 
-	#merge common children
-	for k, e in selfCommon.iteritems():
-		e.merge(peerCommon[k].clone(deep))
+		#merge common children
+		for k, e in selfCommon.iteritems():
+			e.merge(peerCommon[k].clone(deep))
 
 
 def reorder_ids(self, peer):
@@ -216,11 +214,11 @@ def reorder_ids(self, peer):
 	if peer.hasChildNodes() and self.hasChildNodes:
 		for i in range(peer.childNodes.length):
 			e=peer.childNodes.item(i)
-			if e.nodeType == Node.ELEMENT_NODE and e.hasAttribute(ATTR_ID) and int(e.getAttribute("ATTR_ID")) > peerMaxId:
-				peerMaxId = int(e.getAttribute("ATTR_ID"))
+			if e.nodeType == Node.ELEMENT_NODE and e.hasAttribute(ATTR_ID) and int(e.getAttribute(ATTR_ID)) > peerMaxId:
+				peerMaxId = int(e.getAttribute(ATTR_ID))
 
 		for i in range(self.childNodes.length):
 			e=self.childNodes.item(i)
 			if e.nodeType == Node.ELEMENT_NODE and e.hasAttribute(ATTR_ID):
-				e.setAttribute(ATTR_ID, str(int(e.getAttribute("ATTR_ID")) + peerMaxId + 1))
+				e.setAttribute(ATTR_ID, str(int(e.getAttribute(ATTR_ID)) + peerMaxId + 1))
 
