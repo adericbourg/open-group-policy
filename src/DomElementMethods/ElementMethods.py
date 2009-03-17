@@ -12,11 +12,12 @@ class OgpElement(ElementBase):
 		ElementBase.__init__(self, tag, attrib)
 	
 	def __setattr__(self, item, value):
-		if item == "text":
-			print "Deleting all subelements..."
+		if item == "text" and value is not None:
+			#print "Deleting all subelements..."
+			#print "self.tag: " + self.tag + " text: " + value
 			self.delElements()
 		if item == "tail":
-			print "Tail must be none"
+			#print "Tail must be none"
 			value = None
 		
 		ElementBase.__setattr__(self, item, value)
@@ -24,11 +25,8 @@ class OgpElement(ElementBase):
 	def __getAttributes(self):
 		res = dict()
 		for key in self.attrib:
-			res[key] = self.attrib[key]
-		try:
-			del res[ATTR_BLOCK]
-		except:
-			pass
+			if key != ATTR_BLOCK:
+				res[key] = self.attrib[key]
 		return res
 	attributes = property(__getAttributes)
 
@@ -171,7 +169,6 @@ class OgpElement(ElementBase):
 			for k, e in selfCommon.iteritems():
 				e.merge(deepcopy(peerCommon[k]))
 
-
 	def __reorder_ids(self, peer):
 		assert isinstance(peer, OgpElement)
 
@@ -185,7 +182,7 @@ class OgpElement(ElementBase):
 			for e in self:
 				id = e.get(ATTR_ID)
 				if id is not None:
-					e.set(ATTR_ID, str(int(id)) + peerMaxId + 1)
+					e.set(ATTR_ID, str(int(id) + peerMaxId + 1))
 
 	def toString(self):
 		return tostring(self)
