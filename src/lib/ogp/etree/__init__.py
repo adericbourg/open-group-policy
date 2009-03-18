@@ -2,8 +2,7 @@
 # -*- coding: utf-8 -*
 
 from lxml.etree import *
-#from ElementMethods import *
-from ogp.etree  import *
+from elementmethods  import *
 
 def parse(source, parser=None):
 	if not hasattr(source, "read"):
