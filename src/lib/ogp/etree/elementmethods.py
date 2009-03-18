@@ -182,8 +182,18 @@ class OgpElement(ElementBase):
 				if id is not None:
 					e.set(ATTR_ID, str(int(id) + peerMaxId + 1))
 
-	def toString(self):
-		return tostring(self)
+	def toString(self, xsl=None, params=None):
+		if xsl is None:
+			return tostring(self)
+		else:
+			self.__processXsl(xsl, params)
+
+	def __processXsl(self, xsl, params):
+		transform = XSLT(xsl)
+		if params is None:
+			return str(transform(self))
+		else:
+			return str(transform(self), params)
 
 class OgpXmlError(Exception):
 	def __init__(self, value):
@@ -191,7 +201,7 @@ class OgpXmlError(Exception):
 		self.value = value
 	
 	def __str__(self):
-		return repr(self.value)
+					return repr("OgpXmlError: " + self.value)
 
 class OgpElementClassLookup(PythonElementClassLookup):
 	def lookup(self, document, element):
