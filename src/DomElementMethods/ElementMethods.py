@@ -8,8 +8,6 @@ ATTR_BLOCK = "block"
 ATTR_ID = "id"
 
 class OgpElement(ElementBase):
-	def __init(self, tag, attrib):
-		ElementBase.__init__(self, tag, attrib)
 	
 	def __setattr__(self, item, value):
 		if item == "text" and value is not None:
@@ -46,7 +44,7 @@ class OgpElement(ElementBase):
 		"""
 		assert isinstance(blocking, bool)
 		if blocking:
-			self.attrib[ATTR_BLOCK] = str(blocking)
+			self.attrib[ATTR_BLOCK] = str(blocking).lower()
 		else:
 			try:
 				del self.attrib[ATTR_BLOCK]
