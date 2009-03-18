@@ -3,6 +3,7 @@
 
 import ldap
 import ldap.modlist as modlist
+from ldap.dn import *
 from ogpldapconsts import *
 
 class OgpCore(object):
@@ -84,7 +85,8 @@ class OgpCore(object):
 			self.__add(dn, attrs)
 
 		def pullPluginConf(self, dn, pluginName, fullTree=False):
-			pass
+			dn = explode_dn(dn)
+			print dn
 
 		def pushPluginConf(self, dn, conf):
 			pass

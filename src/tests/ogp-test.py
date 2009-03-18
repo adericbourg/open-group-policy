@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*
 
-from OgpCore import *
+from ogp.core import *
 
 uri = "ldap://localhost:389"
 dn = "cn=admin,dc=ogp"
