@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<conf>
-				<key name="key1" type="int">1234</key>
-				<key name="key2" type="string">test string value</key>
-</conf>
