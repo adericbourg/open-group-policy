@@ -3,6 +3,7 @@
 
 from lxml.etree import *
 from elementmethods  import *
+from ogpxmlconsts import *
 
 def parse(source, parser=None):
 	if not hasattr(source, "read"):

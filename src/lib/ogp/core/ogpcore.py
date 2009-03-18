@@ -5,6 +5,9 @@ import ldap
 import ldap.modlist as modlist
 from ldap.dn import *
 from ogpldapconsts import *
+from lxml.etree import *
+from ogp.etree import *
+
 
 class OgpCore(object):
 
@@ -51,7 +54,8 @@ class OgpCore(object):
 			attrs = {}
 			attrs['objectclass'] = OgpLDAPConsts.OBJECTCLASS_OU
 			attrs[OgpLDAPConsts.ATTR_OGPSOA] = OgpLDAPConsts.VALUE_OGPSOA
-			attrs[OgpLDAPConsts.ATTR_DESCRIPTION] = description
+			if description is not None:
+				attrs[OgpLDAPConsts.ATTR_DESCRIPTION] = description
 			attrs[OgpLDAPConsts.ATTR_CONFIG] = OgpLDAPConsts.VALUE_CONFIG
 			self.__add(dn, attrs) 
 
@@ -73,6 +77,8 @@ class OgpCore(object):
 			attrs = others
 			attrs['objectClass'] = OgpLDAPConsts.OBJECTCLASS_MACHINE
 			attrs[OgpLDAPConsts.ATTR_OGPSOA] = OgpLDAPConsts.VALUE_OGPSOA
+			
+			#default values for mandatory fields
 			try:
 				attrs[OgpLDAPConsts.ATTR_SAMACCOUNTNAME]
 			except:
@@ -81,12 +87,42 @@ class OgpCore(object):
 				attrs[OgpLDAPConsts.ATTR_OBJECTSID]
 			except:
 				attrs[OgpLDAPConsts.ATTR_OBJECTSID] = OgpLDAPConsts.VALUE_OBJECTSID
+			
 			attrs[OgpLDAPConsts.ATTR_CONFIG] = OgpLDAPConsts.VALUE_CONFIG
 			self.__add(dn, attrs)
 
+		def __pullConf(self, dn):
+			return fromstring(self.l.search_s(dn, ldap.SCOPE_BASE, attrlist=[OgpLDAPConsts.ATTR_CONFIG])[0][1][OgpLDAPConsts.ATTR_CONFIG][0], OGP_PARSER)
+
 		def pullPluginConf(self, dn, pluginName, fullTree=False):
-			dn = explode_dn(dn)
-			print dn
+			pConf = None
+			if fullTree:
+				dn=str2dn(dn)
+				dn.reverse()
+				loopDn=[]
+				for obj in dn:
+					loopDn.insert(0, obj)
+					dnConf = self.pullPluginConf(dn2str(loopDn), pluginName)
+					if pConf is None:
+						pConf = dnConf
+					elif dnConf is not None:
+						pConf.merge(dnConf)
+					else:
+						pass
+			else:
+				try:
+					conf=self.__pullConf(dn)
+				except:
+					return None
+				
+				for plugin in conf:
+					if plugin.get(OgpXmlConsts.ATTR_PLUGIN_NAME) == pluginName:
+						pConf = plugin
+						break
+			return pConf
 
 		def pushPluginConf(self, dn, conf):
+			pass
+
+		def pullSOAs(self, dn):
 			pass

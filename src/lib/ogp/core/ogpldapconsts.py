@@ -13,7 +13,7 @@ class OgpLDAPConsts:
 	ATTR_OGPSOA				= "oGPSOA"
 	ATTR_MACHINECERTIFICATE	= "oGPMachineCertificate"
 
-	VALUE_CONFIG			= "<conf></conf>"
+	VALUE_CONFIG			= "<ogp/>"
 	VALUE_SAMACCOUNTNAME	= "N/A"
 	VALUE_OBJECTSID			= "\0"
 	VALUE_OGPSOA			= "0"

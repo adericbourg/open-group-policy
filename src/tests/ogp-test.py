@@ -4,7 +4,7 @@
 from ogp.core import *
 
 uri = "ldap://localhost:389"
-dn = "cn=admin,dc=ogp"
+dn = "cn=admin,dc=nodomain"
 passwd = "toor"
 
 # Connection
@@ -22,4 +22,5 @@ ogp = OgpCore(uri, dn, passwd)
 
 toto = OgpCore.getInstance()
 
-toto.createOU("ou=titi3227,ou=tutu,dc=ogp","Bonjour, je teste en en 2kkcjd")
+#toto.createOU("ou=test2,ou=test,dc=nodomain")
+print toto.pullPluginConf("ou=test2,ou=test,dc=nodomain", "test", True).toString()

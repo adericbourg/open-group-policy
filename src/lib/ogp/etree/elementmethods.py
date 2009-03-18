@@ -3,9 +3,7 @@
 
 from lxml.etree import *
 from copy import deepcopy
-
-ATTR_BLOCK = "block"
-ATTR_ID = "id"
+from ogpxmlconsts import *
 
 class OgpElement(ElementBase):
 	
@@ -23,7 +21,7 @@ class OgpElement(ElementBase):
 	def __getAttributes(self):
 		res = dict()
 		for key in self.attrib:
-			if key != ATTR_BLOCK:
+			if key != OgpXmlConsts.ATTR_BLOCK:
 				res[key] = self.attrib[key]
 		return res
 	attributes = property(__getAttributes)
@@ -32,7 +30,7 @@ class OgpElement(ElementBase):
 		"""
 			A more convenient way to access the 'block' special attribute.
 		"""
-		b = self.get(ATTR_BLOCK)
+		b = self.get(OgpXmlConsts.ATTR_BLOCK)
 		if b is None:
 			return False
 		else:
@@ -44,10 +42,10 @@ class OgpElement(ElementBase):
 		"""
 		assert isinstance(blocking, bool)
 		if blocking:
-			self.attrib[ATTR_BLOCK] = str(blocking).lower()
+			self.attrib[OgpXmlConsts.ATTR_BLOCK] = str(blocking).lower()
 		else:
 			try:
-				del self.attrib[ATTR_BLOCK]
+				del self.attrib[OgpXmlConsts.ATTR_BLOCK]
 			except:
 				pass
 	blocking = property(__getBlocking, __setBlocking)
@@ -127,14 +125,14 @@ class OgpElement(ElementBase):
 			raise OgpXmlError('merge: peer has not same name or attributes')
 		
 		#Nodes must have same content. If not, raise OgpXmlError
-		if not ((self.text is None) ^ (peer.text is not None)):
+		if (len(self) == 0) ^ (len(peer) == 0):
 			raise OgpXmlError('merge: peer has not same type of content')
 
 		#if blocking, stop here
 		if self.blocking:return
 
 		#First case : nodes contains Text
-		if self.text is not None:
+		if self.text is not None or peer.text is not None:
 			self.text = peer.text
 			return
 		else: #Second Case : nodes contains nodes
@@ -173,14 +171,14 @@ class OgpElement(ElementBase):
 		peerMaxId = 0
 		if len(peer) > 0 and len(self) > 0:
 			for e in peer:
-				id = e.get(ATTR_ID)
+				id = e.get(OgpXmlConsts.ATTR_ID)
 				if id is not None and int(id) > peerMaxId:
 					peerMaxId = int(id)
 
 			for e in self:
-				id = e.get(ATTR_ID)
+				id = e.get(OgpXmlConsts.ATTR_ID)
 				if id is not None:
-					e.set(ATTR_ID, str(int(id) + peerMaxId + 1))
+					e.set(OgpXmlConsts.ATTR_ID, str(int(id) + peerMaxId + 1))
 
 	def toString(self, xsl=None, params=None):
 		if xsl is None:
