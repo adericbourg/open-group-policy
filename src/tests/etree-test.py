@@ -71,4 +71,5 @@ obj.text = "toto"
 print obj.text
 print obj.toString()
 
+print "------- TOSTRING -----------"
 

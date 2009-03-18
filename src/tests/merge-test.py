@@ -11,3 +11,6 @@ print "parent :\n" + parent.toString()
 print "child :\n" + child.toString()
 parent.merge(child)
 print "merge :\n" + parent.toString()
+
+print etree.OGP_PARSER
+print type(parent)

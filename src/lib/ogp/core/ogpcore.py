@@ -55,6 +55,7 @@ class OgpCore(object):
 			self.__add(dn, attrs) 
 
 		def deleteDN(self, dn):
+			#TODO
 			#self.__delete(dn)
 			pass
 
@@ -64,6 +65,7 @@ class OgpCore(object):
 			self.l.add_s(dn,ldif)
 
 		def __delete(self, dn):
+			#TODO
 			self.l.delete_s(dn)
 
 		def createMachine(self, dn, others={}):
@@ -80,12 +82,6 @@ class OgpCore(object):
 				attrs[OgpLDAPConsts.ATTR_OBJECTSID] = OgpLDAPConsts.VALUE_OBJECTSID
 			attrs[OgpLDAPConsts.ATTR_CONFIG] = OgpLDAPConsts.VALUE_CONFIG
 			self.__add(dn, attrs)
-
-		def merge(self, parent, child):
-			pass
-
-		def xml2conf(self, xml, xslt):
-			return # TODO
 
 		def pullPluginConf(self, dn, pluginName, fullTree=False):
 			pass
