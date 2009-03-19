@@ -6,7 +6,6 @@ from abstractmethod import AbstractMethod
 
 class Plugin(object):
 	#__metaclass__ = Metaclass
-
 	def __init__(self, dn):
 		self.__dn = dn
 	
