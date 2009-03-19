@@ -2,6 +2,10 @@
 # -*- coding: utf-8 -*
 
 class OgpLDAPConsts:
+	"""
+		Provides LDAP object classes and attributes names
+		and attributes default values.
+	"""
 
 	OBJECTCLASS_OU 			= "oGPOrganizationalUnit"
 	OBJECTCLASS_MACHINE 	= "oGPComputer"

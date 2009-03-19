@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*
 
 from ogp.core import *
+from ogp.etree import *
 
 uri = "ldap://localhost:389"
 dn = "cn=admin,dc=nodomain"
@@ -22,5 +23,9 @@ ogp = OgpCore(uri, dn, passwd)
 
 toto = OgpCore.getInstance()
 
-#toto.createOU("ou=test2,ou=test,dc=nodomain")
-print toto.pullPluginConf("ou=test2,ou=test,dc=nodomain", "test", True).toString()
+#toto.createOU("ou=test,dc=nodomain")
+#print toto.pullPluginConf("ou=test2,ou=test,dc=nodomain", "test", True).toString()
+#conf = fromstring('<plugin name="test">test pushConf le retour</plugin>', OGP_PARSER)
+#toto.pushPluginConf("ou=test2,ou=test,dc=nodomain", conf)
+#toto.deleteDN("dc=nodomain")
+print toto.pushDescription("ou=test,dc=nodomain", "test")

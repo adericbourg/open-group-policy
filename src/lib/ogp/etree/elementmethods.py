@@ -6,19 +6,35 @@ from copy import deepcopy
 from ogpxmlconsts import *
 
 class OgpElement(ElementBase):
-	
+	"""
+		lxml Element class providing redefined secure methods, compliant with the merge algorithm :
+		def delElements(self):
+		def append(self, newChild):
+		def insert(self, index, newChild):
+		def extend(self, elements):
+		def set(self, name, value):
+		def merge(self, peer):
+		def toString(self, xsl=None, params=None):
+		attributes = property(__getAttributes)
+		You should NOT use other methods or modify attributes because it may crash the merge algorithm.
+	"""
+
 	def __setattr__(self, item, value):
+		"""
+			If target attribute is text, deletes all subelements.
+			If targeted attribue is tail, forces value to None
+		"""
 		if item == "text" and value is not None:
-			#print "Deleting all subelements..."
-			#print "self.tag: " + self.tag + " text: " + value
 			self.delElements()
 		if item == "tail":
-			#print "Tail must be none"
 			value = None
 		
 		ElementBase.__setattr__(self, item, value)
 
 	def __getAttributes(self):
+		"""
+			Returns the attributes dict(), without the OgpXmlConsts.ATTR_BLOCK ('block') attribute.
+		"""
 		res = dict()
 		for key in self.attrib:
 			if key != OgpXmlConsts.ATTR_BLOCK:
@@ -28,7 +44,7 @@ class OgpElement(ElementBase):
 
 	def __getBlocking(self):
 		"""
-			A more convenient way to access the 'block' special attribute.
+			A more convenient way to access the OgpXmlConsts.ATTR_BLOCK ('block') special attribute.
 		"""
 		b = self.get(OgpXmlConsts.ATTR_BLOCK)
 		if b is None:
@@ -38,7 +54,7 @@ class OgpElement(ElementBase):
 
 	def __setBlocking(self, blocking):
 		"""
-			Sets the 'block' special attribute.
+			Sets the OgpXmlConsts.ATTR_BLOCK ('block') special attribute.
 		"""
 		assert isinstance(blocking, bool)
 		if blocking:
@@ -52,7 +68,7 @@ class OgpElement(ElementBase):
 
 	def delElements(self):
 		"""
-			Removes any Text or CDATASection child
+			Removes any child
 		"""
 		for e in self:
 			self.remove(e)
@@ -69,9 +85,8 @@ class OgpElement(ElementBase):
 
 	def append(self, newChild):
 		"""
-			Works as the standard function, but :
-			- If newChild is an Element, checks unicity before adding, and deletes every Text or CDATASection
-			- If newChild is a Text , deletes every Element child, adds it and the normalize().
+			Works as the standard function, but if newChild is an Element, 
+			checks unicity before adding, and deletes text
 		"""
 		assert isinstance(newChild, OgpElement)
 		if (not self.__checkUnicity(newChild)):raise OgpXmlError('append: element is not unique')
@@ -80,9 +95,8 @@ class OgpElement(ElementBase):
 
 	def insert(self, index, newChild):
 		"""
-			Works as the standard function, but :
-			- If newChild is an Element, checks unicity before adding, and deletes every Text or CDATASection
-			- If newChild is a Text , deletes every Element child, adds it and the normalize().
+			Works as the standard function, but if newChild is an Element, but 
+			checks unicity before adding, and deletes text.
 		"""
 		assert isinstance(newChild, OgpElement)
 		assert isinstance(index, int)
@@ -92,12 +106,21 @@ class OgpElement(ElementBase):
 		ElementBase.insert(self, index, element)
 
 	def extend(self, elements):
+		"""
+			Works as the standard function, but if newChild is an Element, but
+			checks unicity before adding, and deletes text.
+		"""
 		for element in elements:
 			assert isinstance(element, OgpElement)
 			if (not self.__checkUnicity(element)):raise OgpXmlError('extend: element is not unique')
-			ElementBase.append(self, element) 
+		self.text = None
+		ElementBase.extend(self, elements) 
 
 	def set(self, name, value):
+		"""
+			Works as the standard function, but if newChild is an Element, but
+			checks that self will still be unique after setting the attribute.
+		"""
 		assert isinstance(name, str)
 		assert isinstance(value, str)
 		#Computation of new attribute list
@@ -114,7 +137,7 @@ class OgpElement(ElementBase):
 
 	def merge(self, peer):
 		"""
-			Merges self with peer. peer is considered as the "child" conf (LDAP speaking), so that it has precendence on self.
+			Merges self with peer. Peer is considered as the "child" conf (LDAP speaking), so that it has precendence on self.
 			See plugin documentation for further details on the algorithm
 		"""
 		assert isinstance(peer, OgpElement)
@@ -194,6 +217,9 @@ class OgpElement(ElementBase):
 			return str(transform(self), params)
 
 class OgpXmlError(Exception):
+	"""
+		OGP XML error class.
+	"""
 	def __init__(self, value):
 		assert isinstance(value, str)
 		self.value = value
@@ -202,6 +228,8 @@ class OgpXmlError(Exception):
 					return repr("OgpXmlError: " + self.value)
 
 class OgpElementClassLookup(PythonElementClassLookup):
+	"""
+		Standard OgpElement "factory"
+	"""
 	def lookup(self, document, element):
-		return OgpElement # defined elsewhere
-
+		return OgpElement
