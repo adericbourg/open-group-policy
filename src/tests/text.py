@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*
-from DomElementMethods import *
+from ogp.etree import *
 
 obj = Element("AAA")
 obj.text = "pouet"

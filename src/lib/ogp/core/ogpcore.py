@@ -220,8 +220,8 @@ class OgpCore(object):
 			self.l.delete_s(dn)
 
 		def __pullConf(self, dn):
-			return fromstring(self.pullAttributes(dn,[OgpLDAPConsts.ATTR_CONFIG])[OgpLDAPConsts.ATTR_CONFIG], OGP_PARSER)
+			return fromstring(self.pullAttributes(dn,[OgpLDAPConsts.ATTR_CONFIG])[OgpLDAPConsts.ATTR_CONFIG][0], OGP_PARSER)
 
 		def __pullSOA(self, dn):
-			return int(self.pullAttributes(dn, [OgpLDAPConsts.ATTR_OGPSOA])[OgpLDAPConsts.ATTR_OGPSOA])
+			return int(self.pullAttributes(dn, [OgpLDAPConsts.ATTR_OGPSOA])[OgpLDAPConsts.ATTR_OGPSOA][0])
 		
