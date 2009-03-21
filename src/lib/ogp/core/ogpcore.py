@@ -201,13 +201,33 @@ class OgpCore(object):
 			loopDn=[]
 			for obj in dn:
 				loopDn.insert(0, obj)
-				print dn2str(loopDn)
 				try:
 					SOAs[dn2str(loopDn)] = self.__pullSOA(dn2str(loopDn))
-					print dn2str(loopDn) + SOAs[dn2str(loopDn)]
 				except:
 					pass
 			return SOAs
+
+		def getRequiredPlugins(self, dn):
+			"""
+				Returns the names of the plugins that should be installed on the client,
+				identified by its DN, to install the configuration store in the LDAP.
+				dn: the distinguished name of the targeted object
+			"""
+			plugins = []
+			dn=str2dn(dn)
+			dn.reverse()
+			loopDn=[]
+			for obj in dn:
+				loopDn.insert(0, obj)
+				try:
+					conf = self.__pullConf(dn2str(loopDn))
+					for plugin in conf:
+						if plugin.get(OgpXmlConsts.ATTR_PLUGIN_NAME) not in plugins:
+							plugins.append(plugin.get(OgpXmlConsts.ATTR_PLUGIN_NAME))
+				except:
+					pass
+			plugins.sort()
+			return plugins
 		
 		def __add(self, dn, attrs):
 			ldif = modlist.addModlist(attrs)

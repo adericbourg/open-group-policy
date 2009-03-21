@@ -5,7 +5,7 @@ from ogp.core import *
 from ogp.etree import *
 
 uri = "ldap://localhost:389"
-dn = "cn=admin,dc=ogp"
+dn = "cn=admin,dc=nodomain"
 passwd = "toor"
 
 # Connection
@@ -23,9 +23,10 @@ ogp = OgpCore(uri, dn, passwd)
 
 toto = OgpCore.getInstance()
 
-#toto.createOU("ou=test,dc=ogp")
-conf = fromstring('<plugin name="test">test pushConf le retour</plugin>', OGP_PARSER)
-toto.pushPluginConf("ou=test,dc=ogp", conf)
+toto.createOU("ou=test2,ou=test,dc=nodomain")
+conf = fromstring('<plugin name="test2">test pushConf le retour</plugin>', OGP_PARSER)
+toto.pushPluginConf("ou=test2,ou=test,dc=nodomain", conf)
 #toto.deleteDN("ou=test,dc=ogp")
-print toto.pushDescription("ou=test,dc=ogp", "test")
-print toto.pullPluginConf("ou=test,dc=ogp", "test", True).toString()
+#print toto.pushDescription("ou=test,dc=ogp", "test")
+#print toto.pullPluginConf("ou=test,dc=nodomain", "test").get('name')
+print toto.getRequiredPlugins("ou=test2,ou=test,dc=nodomain")

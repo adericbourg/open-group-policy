@@ -14,7 +14,7 @@ class M_Plugin(type):
 	"""
 		Makes the 'name' __CLASS__ attribute readonly.
 	"""
-	__setattr__ = setattr
+	__setattr__ = setattr # Plugin name protection
 
 class Plugin(object):
 	"""
@@ -26,7 +26,7 @@ class Plugin(object):
 	def __init__(self, dn):
 		self.__dn = dn
 	
-	__setattr__ = setattr
+	__setattr__ = setattr # Plugin name protection
 
 	name = None # the plugin name
 	__registeredPlugins = dict()
@@ -94,7 +94,7 @@ class Plugin(object):
 	
 	def help(self, cmdName=None):
 		"""
-			provides informations about the plugin user interface
+			provides informations about the plugin user interface.
 			plugin.help() should return all available commands as a dict {cmdName: description}
 			plugin.help(cmdName) should return all available arguments as a dict {argName: description}
 		"""
@@ -102,7 +102,7 @@ class Plugin(object):
 
 	def runCommand(self, cmdName, argv):
 		"""
-			runs a command on the conf
+			Runs a command on the conf.
 			Usage:
 				plugin.runCommand(cmdName, argv)
 				where argv is a dict {argName: argVal}
@@ -111,7 +111,7 @@ class Plugin(object):
 	
 	def pullFile(self, file, fullTree=False):
 		"""
-			builds the content of a file from the XML tree, for preview purposes.
+			Builds the content of a file from the XML tree, for preview purposes.
 			Arguments:
 				file          : the logical name of the targeted file
 				fullTree=False: if set to true, merges the conf from the baseDN up to the current DN before building
@@ -120,7 +120,7 @@ class Plugin(object):
 
 	def pushFile(self, file, content):
 		"""
-			builds XML configuration from a string content and loads it in the corresponding <file> Element
+			Builds XML configuration from a string content and loads it in the corresponding <file> Element
 			Arguments:
 				file   : the logical name of the targeted file
 				content: the content of the file

@@ -5,5 +5,5 @@ from ogp.plugins.plugin import *
 
 class Test(Plugin):
 	name = "test"
-	def test(self):
-		print "toto" + self.name
+	def installConf(self):
+		pass

@@ -31,9 +31,9 @@ class OgpElement(ElementBase):
 		if item == "text" and value is not None:
 			self.delElements()
 		if item == "tail":
-			raise OgpXmlError('__setattr__: setting tail is forbiden, it must be None')
+			raise OgpXmlError('__setattr__: setting tail is forbiden, it must be None.')
 		if item == "attrib":
-			raise OgpXmlError('__setattr__: setting attributes directly is forbiden, please use self.set(name, value)')
+			raise OgpXmlError('__setattr__: setting attributes directly is forbiden, please use self.set(name, value).')
 		ElementBase.__setattr__(self, item, value)
 
 	def __getattribute__(self, item):
@@ -111,7 +111,7 @@ class OgpElement(ElementBase):
 			checks unicity before adding, and deletes text
 		"""
 		assert isinstance(newChild, OgpElement)
-		if (not self.__checkUnicity(newChild)):raise OgpXmlError('append: element is not unique')
+		if (not self.__checkUnicity(newChild)):raise OgpXmlError('append: element is not unique.')
 		self.text = None
 		ElementBase.append(self, newChild)
 
@@ -123,7 +123,7 @@ class OgpElement(ElementBase):
 		assert isinstance(newChild, OgpElement)
 		assert isinstance(index, int)
 
-		if (not self.__checkUnicity(newChild)):raise OgpXmlError('insert: element is not unique')
+		if (not self.__checkUnicity(newChild)):raise OgpXmlError('insert: element is not unique.')
 		self.text = None
 		ElementBase.insert(self, index, element)
 
@@ -134,7 +134,7 @@ class OgpElement(ElementBase):
 		"""
 		for element in elements:
 			assert isinstance(element, OgpElement)
-			if (not self.__checkUnicity(element)):raise OgpXmlError('extend: element is not unique')
+			if (not self.__checkUnicity(element)):raise OgpXmlError('extend: element is not unique.')
 		self.text = None
 		ElementBase.extend(self, elements) 
 
@@ -154,7 +154,7 @@ class OgpElement(ElementBase):
 		if parent is not None:
 			for br in parent:
 				if br is not self and br.tag == self.tag and br.attributes == newattrs:
-					raise OgpXmlError('set: element would no more be unique')
+					raise OgpXmlError('set: element would no more be unique.')
 		self.__attrib[name] = value
 
 	def merge(self, peer):
@@ -167,11 +167,11 @@ class OgpElement(ElementBase):
 		#if self and peer are not exactly the same (i.e. same name and same attributes),
 		#raise OgpXmlError.
 		if self.tag != peer.tag or self.attributes != peer.attributes:
-			raise OgpXmlError('merge: peer has not same name or attributes')
+			raise OgpXmlError('merge: peer has not same name or attributes.')
 		
 		#Nodes must have same content. If not, raise OgpXmlError
-		if (len(self) == 0) ^ (len(peer) == 0):
-			raise OgpXmlError('merge: peer has not same type of content')
+		if ((len(self) == 0) ^ (len(peer) == 0)) or ((self.text is None) ^ (peer.text is None)):
+			raise OgpXmlError('merge: peer has not same type of content.')
 
 		#if blocking, stop here
 		if self.blocking:return
