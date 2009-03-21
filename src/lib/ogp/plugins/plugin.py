@@ -69,7 +69,22 @@ class Plugin(object):
 			Do not commit and discard changes.
 		"""
 		pass
-	
+
+	def chown(self, filename, uid=None, gid=None):
+		"""
+			Changes owner, changes the user and/or group ownership of 
+			the given file
+		"""
+		#TODO
+		pass
+
+	def chmod(self, filename, uw, ux, us, gs, t):
+		"""
+			Changes the permissions of the given file according to mode
+		"""
+		#TODO
+		pass
+
 	# Abstract methods
 	def installConf(self):
 		"""
