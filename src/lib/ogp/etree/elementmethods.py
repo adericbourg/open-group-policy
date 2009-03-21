@@ -8,15 +8,19 @@ from ogpxmlconsts import *
 class OgpElement(ElementBase):
 	"""
 		lxml Element class providing redefined secure methods, compliant with the merge algorithm :
-		def delElements(self):
-		def append(self, newChild):
-		def insert(self, index, newChild):
-		def extend(self, elements):
-		def set(self, name, value):
-		def merge(self, peer):
-		def toString(self, xsl=None, params=None):
+		delElements(self):
+		append(self, newChild):
+		insert(self, index, newChild):
+		extend(self, elements):
+		set(self, name, value):
+		merge(self, peer):
+		toString(self, xsl=None, params=None):
 		attributes = property(__getAttributes)
-		You should NOT use other methods or modify attributes because it may crash the merge algorithm.
+		text attribute is protected : setting it to something not None deletes all subelements.
+		tail is protected : if you try to modify it, it will still be None
+		attrib if protected : you can only get a copy, so yon can't modify it without using self.set(name, value)
+		
+		You should NOT use other methods because it may crash the merge algorithm.
 	"""
 
 	def __setattr__(self, item, value):
@@ -27,9 +31,27 @@ class OgpElement(ElementBase):
 		if item == "text" and value is not None:
 			self.delElements()
 		if item == "tail":
-			value = None
-		
+			raise OgpXmlError('__setattr__: setting tail is forbiden, it must be None')
+		if item == "attrib":
+			raise OgpXmlError('__setattr__: setting attributes directly is forbiden, please use self.set(name, value)')
 		ElementBase.__setattr__(self, item, value)
+
+	def __getattribute__(self, item):
+		"""
+			Protects the 'attrib' attributes by returning a copy instead of the real object.
+			This returns a dict instance, not an _Attrib, but it seems to work
+		"""
+		if item == "attrib":
+			return dict(ElementBase.__getattribute__(self, item))
+		else:
+			return ElementBase.__getattribute__(self, item)
+
+	def __getRealAttrib(self):
+		"""
+			Provides a private property to access the real 'attrib' attribute.
+		"""
+		return ElementBase.__getattribute__(self, "attrib")
+	__attrib = property(__getRealAttrib)
 
 	def __getAttributes(self):
 		"""
@@ -58,10 +80,10 @@ class OgpElement(ElementBase):
 		"""
 		assert isinstance(blocking, bool)
 		if blocking:
-			self.attrib[OgpXmlConsts.ATTR_BLOCK] = str(blocking).lower()
+			self.__attrib[OgpXmlConsts.ATTR_BLOCK] = str(blocking).lower()
 		else:
 			try:
-				del self.attrib[OgpXmlConsts.ATTR_BLOCK]
+				del self.__attrib[OgpXmlConsts.ATTR_BLOCK]
 			except:
 				pass
 	blocking = property(__getBlocking, __setBlocking)
@@ -133,7 +155,7 @@ class OgpElement(ElementBase):
 			for br in parent:
 				if br is not self and br.tag == self.tag and br.attributes == newattrs:
 					raise OgpXmlError('set: element would no more be unique')
-		self.attrib[name] = value
+		self.__attrib[name] = value
 
 	def merge(self, peer):
 		"""

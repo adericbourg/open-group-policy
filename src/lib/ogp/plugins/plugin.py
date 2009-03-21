@@ -1,13 +1,33 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*
 
+def setattr(self, item, value):
+	"""
+		Plugin class and metaclass __setattr__ method
+		Throws an exception when attempting to modify the plugin name.
+	"""
+	if item == "name":
+		raise OgpPluginError('__setattr__: name is readonly.')
+	self.__dict__[item] = value
+
+class M_Plugin(type):
+	"""
+		Makes the 'name' __CLASS__ attribute readonly.
+	"""
+	__setattr__ = setattr
+
 class Plugin(object):
 	"""
-		Provides plugins' base class and plugin registration mechanism
+		Provides plugins' base class and plugin registration mechanism.
 	"""
+	
+	__metaclass__ = M_Plugin
+	
 	def __init__(self, dn):
 		self.__dn = dn
 	
+	__setattr__ = setattr
+
 	name = None # the plugin name
 	__registeredPlugins = dict()
 	
@@ -25,7 +45,7 @@ class Plugin(object):
 		"""
 		try:
 			Plugin.__registeredPlugins[pluginClass.name]
-			raise OgpPluginError("registerPlugin: duplicated plugin name '" + pluginClass.name + "'")
+			raise OgpPluginError("registerPlugin: duplicated plugin name '" + pluginClass.name + "'.")
 		except:
 			pass
 		Plugin.__registeredPlugins[pluginClass.name] = pluginClass

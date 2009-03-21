@@ -69,7 +69,19 @@ obj.append(elt)
 print obj.toString()
 obj.text = "toto"
 print obj.text
+
+print "----PROTECTION ATTRIB----"
+try:
+	obj.attrib = {"test": "aaa"}
+except:
+	print "crash"
 print obj.toString()
-
-print "------- TOSTRING -----------"
-
+obj.set("test", "a")
+print obj.toString()
+a=obj.attrib
+a['test2'] = 'bb'
+print obj.toString()
+try:
+	obj.tail = "hkhk"
+except:
+	print "crash"
