@@ -139,6 +139,7 @@ class OgpElement(ElementBase):
 		ElementBase.extend(self, elements) 
 
 	def set(self, name, value):
+		#TODO: make a 'real' sentence in the description
 		"""
 			Works as the standard function, but if newChild is an Element, but
 			checks that self will still be unique after setting the attribute.
