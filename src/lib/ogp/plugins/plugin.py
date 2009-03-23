@@ -1,6 +1,14 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*
 
+from ldap.dn import str2dn, dn2str
+from lxml.etree import *
+from ogp.core import *
+
+
+class omitted(object):
+	pass
+
 def setattr(self, item, value):
 	"""
 		Plugin class and metaclass __setattr__ method
@@ -22,9 +30,17 @@ class Plugin(object):
 	"""
 	
 	__metaclass__ = M_Plugin
-	
+	__parentDn = None
+	__dn = None
+	__core = None
+
 	def __init__(self, dn):
+		self.__core = OgpCore.getInstance()
 		self.__dn = dn
+		self.__currentConf = self.__core.pullPluginConf(self.__dn, self.name)
+		self.__parentDn = str2dn(dn)
+		del self.__parentDn[0]
+		self.__parentDn = dn2str(self.__parentDn)
 	
 	__setattr__ = setattr # Plugin name protection
 
@@ -62,28 +78,94 @@ class Plugin(object):
 		"""
 			Commit changes to LDAP
 		"""
-		pass
+		self.__core.pushPluginConf(self.__dn, self.__currentConf)
 
 	def cancel(self):
 		"""
 			Do not commit and discard changes.
 		"""
-		pass
+		print "--- CANCEL ---"
+		print self.__currentConf.toString()
+		self.__currentConf = self.__core.pullPluginConf(self.__dn, self.name)
+		print self.__currentConf.toString()
 
-	def chown(self, filename, uid=None, gid=None):
+
+	def chown(self, fileName, uid=omitted, gid=omitted, blocking=False):
 		"""
 			Changes owner, changes the user and/or group ownership of 
 			the given file
 		"""
-		#TODO
-		pass
+		#print self.__currentConf.toString()
+		file_e = self.__getFile(fileName)
+		sec_e = file_e.xpath(OgpXmlConsts.TAG_SECURITY)[0]
 
-	def chmod(self, filename, uw, ux, us, gs, t):
+		if uid is not omitted:
+			uid_e = sec_e.xpath(OgpXmlConsts.TAG_UID)
+			if len(uid_e) != 0:
+				uid_e = uid_e[0]
+			else:
+				uid_e = None
+			if uid is None:
+				if uid_e is not None:
+					sec_e.remove(uid_e)
+			else:
+				if uid_e is None:
+					uid_e = Element(OgpXmlConsts.TAG_UID)
+					sec_e.append(uid_e)
+				uid_e.text = str(uid)
+				uid_e.blocking = blocking
+
+		if gid is not omitted:
+			gid_e = sec_e.xpath(OgpXmlConsts.TAG_GID)
+			if len(gid_e) != 0:
+				gid_e = gid_e[0]
+			else:
+				gid_e = None
+			if gid is None:
+				if gid_e is not None:
+					sec_e.remove(gid_e)
+			else:
+				if gid_e is None:
+					gid_e = Element(OgpXmlConsts.TAG_GID)
+					sec_e.append(gid_e)
+				gid_e.text = str(gid)
+				gid_e.blocking = blocking
+		#print self.__currentConf.toString()
+
+	def __getFile(self, fileName):
+		arg = '/' + OgpXmlConsts.TAG_PLUGIN + '/' + OgpXmlConsts.TAG_FILES + '/' + OgpXmlConsts.TAG_FILE + '[@' + OgpXmlConsts.ATTR_FILE_NAME + "='" + fileName + "']"
+		try:
+			return self.__currentConf.xpath(arg)[0]
+		except:
+			raise OgpPluginError("__getFile: file '" + fileName + "' does not exist")
+
+
+	def chmod(self, fileName, rights, blocking=False):
 		"""
 			Changes the permissions of the given file according to mode
 		"""
-		#TODO
-		pass
+		print self.__currentConf.toString()
+		file_e = self.__getFile(fileName)
+		sec_e = file_e.xpath(OgpXmlConsts.TAG_SECURITY)[0]
+		for tag in rights:
+			if tag in OgpXmlConsts.TAGS_SECURITY:
+				tag_e = sec_e.xpath(tag)
+				if len(tag_e) != 0:
+					tag_e = tag_e[0]
+				else:
+					tag_e = None
+				if rights[tag] is None:
+					if tag_e is not None:
+						sec_e.remove(tag_e)
+				else:
+					if tag_e is None:
+						tag_e = Element(tag)
+						sec_e.append(tag_e)
+					tag_e.text = str(rights[tag])
+			else:
+				#TODO: log!
+				pass
+		print self.__currentConf.toString()
 
 	# Abstract methods
 	def installConf(self):

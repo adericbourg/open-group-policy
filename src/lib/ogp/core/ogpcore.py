@@ -155,15 +155,13 @@ class OgpCore(object):
 						pass
 			else:
 				try:
-					conf=self.__pullConf(dn)
+					xpath_arg = "/" + OgpXmlConsts.TAG_OGP + "/" + OgpXmlConsts.TAG_PLUGIN + "[@" + OgpXmlConsts.ATTR_PLUGIN_NAME  + "='" + pluginName +"']"
+					pConf = self.__pullConf(dn).xpath(xpath_arg)[0]
 				except:
 					return None
 				
-				for plugin in conf:
-					if plugin.get(OgpXmlConsts.ATTR_PLUGIN_NAME) == pluginName:
-						pConf = plugin
-						break
-			return pConf
+			#DIRTY HACK: set <plugin name="..."> as root element
+			return fromstring(pConf.toString(), OGP_PARSER)
 
 		def pushPluginConf(self, dn, pluginConf):
 			"""
