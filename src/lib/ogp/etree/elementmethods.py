@@ -5,6 +5,11 @@ from lxml.etree import *
 from copy import deepcopy
 from ogpxmlconsts import *
 
+def Element(name):
+	OGP_PARSER = XMLParser()
+	OGP_PARSER.set_element_class_lookup(ElementDefaultClassLookup(element=OgpElement))
+	return OGP_PARSER.makeelement(name)
+
 class OgpElement(ElementBase):
 	"""
 		lxml Element class providing redefined secure methods, compliant with the merge algorithm :
@@ -238,6 +243,26 @@ class OgpElement(ElementBase):
 			return str(transform(self))
 		else:
 			return str(transform(self), params)
+
+	def __makePlugin(name, fileNames):
+		res = Element(OgpXmlConsts.TAG_PLUGIN)
+		res.set(OgpXmlConsts.ATTR_PLUGIN_NAME, name)
+		res.append(Element(OgpXmlConsts.TAG_CONF))
+		files_e = Element(OgpXmlConsts.TAG_FILES)
+		res.append(files_e)
+		for f in fileNames:
+			f_e = OgpElement.makeFile(f)
+			files_e.append(f_e)
+		return res
+	makePlugin = staticmethod(__makePlugin)
+
+	def __makeFile(name):
+		res = Element(OgpXmlConsts.TAG_FILE)
+		res.set(OgpXmlConsts.ATTR_FILE_NAME, name)
+		res.append(Element(OgpXmlConsts.TAG_CONF))
+		res.append(Element(OgpXmlConsts.TAG_SECURITY))
+		return res
+	makeFile = staticmethod(__makeFile)
 
 class OgpXmlError(Exception):
 	"""

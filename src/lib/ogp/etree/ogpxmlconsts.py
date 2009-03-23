@@ -22,6 +22,7 @@ class OgpXmlConsts:
 	TAG_UID = "uid"
 	TAG_GID = "gid"
 	TAG_SECURITY = "security"
+	TAG_CONF = "conf"
 	TAG_FILE = "file"
 	TAG_FILES = "files"
 	TAG_PLUGIN = "plugin"

@@ -14,8 +14,8 @@ def setattr(self, item, value):
 		Plugin class and metaclass __setattr__ method
 		Throws an exception when attempting to modify the plugin name.
 	"""
-	if item == "name":
-		raise OgpPluginError('__setattr__: name is readonly.')
+	if item == "name" or item == "files":
+		raise OgpPluginError('__setattr__: ' + item + ' is readonly.')
 	self.__dict__[item] = value
 
 class M_Plugin(type):
@@ -29,23 +29,26 @@ class Plugin(object):
 		Provides plugins' base class and plugin registration mechanism.
 	"""
 	
+	name = None # the plugin name
+	files = []
 	__metaclass__ = M_Plugin
-	__parentDn = None
-	__dn = None
+	parentDn = None
+	dn = None
 	__core = None
+	__registeredPlugins = dict()
 
 	def __init__(self, dn):
 		self.__core = OgpCore.getInstance()
-		self.__dn = dn
-		self.__currentConf = self.__core.pullPluginConf(self.__dn, self.name)
-		self.__parentDn = str2dn(dn)
-		del self.__parentDn[0]
-		self.__parentDn = dn2str(self.__parentDn)
+		self.dn = dn
+		# Dirty but it pleases Michel :-P
+		# Loads RW XML conf from LDAP
+		self.cancel()
+		# Parent DN (to find parent conf)
+		self.parentDn = str2dn(dn)
+		del self.parentDn[0]
+		self.parentDn = dn2str(self.parentDn)
 	
 	__setattr__ = setattr # Plugin name protection
-
-	name = None # the plugin name
-	__registeredPlugins = dict()
 	
 	def __getPluginFromName(name):
 		"""
@@ -78,16 +81,15 @@ class Plugin(object):
 		"""
 			Commit changes to LDAP
 		"""
-		self.__core.pushPluginConf(self.__dn, self.__currentConf)
+		self.__core.pushPluginConf(self.dn, self.currentConf)
 
 	def cancel(self):
 		"""
 			Do not commit and discard changes.
 		"""
-		print "--- CANCEL ---"
-		print self.__currentConf.toString()
-		self.__currentConf = self.__core.pullPluginConf(self.__dn, self.name)
-		print self.__currentConf.toString()
+		self.currentConf = self.__core.pullPluginConf(self.dn, self.name)
+		if self.currentConf is None:
+			self.currentConf = OgpElement.makePlugin(self.name, self.files)
 
 
 	def chown(self, fileName, uid=omitted, gid=omitted, blocking=False):
@@ -95,7 +97,6 @@ class Plugin(object):
 			Changes owner, changes the user and/or group ownership of 
 			the given file
 		"""
-		#print self.__currentConf.toString()
 		file_e = self.__getFile(fileName)
 		sec_e = file_e.xpath(OgpXmlConsts.TAG_SECURITY)[0]
 
@@ -130,12 +131,11 @@ class Plugin(object):
 					sec_e.append(gid_e)
 				gid_e.text = str(gid)
 				gid_e.blocking = blocking
-		#print self.__currentConf.toString()
 
 	def __getFile(self, fileName):
 		arg = '/' + OgpXmlConsts.TAG_PLUGIN + '/' + OgpXmlConsts.TAG_FILES + '/' + OgpXmlConsts.TAG_FILE + '[@' + OgpXmlConsts.ATTR_FILE_NAME + "='" + fileName + "']"
 		try:
-			return self.__currentConf.xpath(arg)[0]
+			return self.currentConf.xpath(arg)[0]
 		except:
 			raise OgpPluginError("__getFile: file '" + fileName + "' does not exist")
 
@@ -144,7 +144,6 @@ class Plugin(object):
 		"""
 			Changes the permissions of the given file according to mode
 		"""
-		print self.__currentConf.toString()
 		file_e = self.__getFile(fileName)
 		sec_e = file_e.xpath(OgpXmlConsts.TAG_SECURITY)[0]
 		for tag in rights:
@@ -165,7 +164,6 @@ class Plugin(object):
 			else:
 				#TODO: log!
 				pass
-		print self.__currentConf.toString()
 
 	# Abstract methods
 	def installConf(self):
@@ -200,12 +198,13 @@ class Plugin(object):
 		"""
 		raise NotImplementedError('This method should be overriden in derived classes.')
 
-	def pushFile(self, file, content):
+	def pushFile(self, file, content, blocking=False):
 		"""
 			Builds XML configuration from a string content and loads it in the corresponding <file> Element
 			Arguments:
-				file   : the logical name of the targeted file
-				content: the content of the file
+				file    : the logical name of the targeted file
+				content : the content of the file
+				blocking: sets the block attribute on the targeted file
 		"""
 		raise NotImplementedError('This method should be overriden in derived classes.')
 
