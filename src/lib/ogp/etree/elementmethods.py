@@ -4,6 +4,7 @@
 from lxml.etree import *
 from copy import deepcopy
 from ogpxmlconsts import *
+from ogp.misc import *
 
 def Element(name):
 	OGP_PARSER = XMLParser()
@@ -77,7 +78,7 @@ class OgpElement(ElementBase):
 		if b is None:
 			return False
 		else:
-			return bool(b)
+			return smart_bool(b)
 
 	def __setBlocking(self, blocking):
 		"""
@@ -176,8 +177,8 @@ class OgpElement(ElementBase):
 			raise OgpXmlError('merge: peer has not same name or attributes.')
 		
 		#Nodes must have same content. If not, raise OgpXmlError
-		if ((len(self) == 0) ^ (len(peer) == 0)) or ((self.text is None) ^ (peer.text is None)):
-			raise OgpXmlError('merge: peer has not same type of content.')
+		if ((len(self) == 0) ^ (len(peer) == 0)) and ((self.text is None) ^ (peer.text is None)):
+			raise OgpXmlError('merge: peer has not same type of content.\nself: ' + self.toString() + '\npeer: ' + peer.toString())
 
 		#if blocking, stop here
 		if self.blocking:return

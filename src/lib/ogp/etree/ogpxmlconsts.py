@@ -27,4 +27,5 @@ class OgpXmlConsts:
 	TAG_FILES = "files"
 	TAG_PLUGIN = "plugin"
 
-	TAGS_SECURITY = ['ux', 'ur', 'uw', 'us', 'gx', 'gr', 'gw', 'gs', 'ox', 'or', 'ow', 't']
+	TAGS_OWN = ['uid', 'gid']
+	TAGS_MOD = ['ux', 'ur', 'uw', 'us', 'gx', 'gr', 'gw', 'gs', 'ox', 'or', 'ow', 't']
