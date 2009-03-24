@@ -33,6 +33,7 @@ class Plugin(object):
 	files = []
 	__metaclass__ = M_Plugin
 	parentDn = None
+	currentConf = None
 	dn = None
 	__core = None
 	__registeredPlugins = dict()
