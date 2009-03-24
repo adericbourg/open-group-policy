@@ -1,0 +1,28 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*
+
+from ogp.core import *
+from ogp.plugins import *
+
+uri = "ldap://localhost:389"
+userDn = "cn=admin,dc=nodomain"
+passwd = "toor"
+dn='ou=test2,ou=test,dc=nodomain'
+
+# Connection
+core = OgpCore(uri, userDn, passwd)
+
+requiredPlugins=core.getRequiredPlugins(dn)
+for pluginName in requiredPlugins:
+	print "Installing conf for plugin '" + pluginName + "'... ",
+	try:
+		pluginClass = Plugin.getPluginFromName(pluginName)
+		pluginInstance = pluginClass(dn)
+		pluginInstance.installConf()
+		print "\033[0;32mOK\033[0m."
+	except KeyError:
+		print "\033[0;31mfailed\033[0m. Plugin '" + pluginName + "' is missing!"
+	except:
+		print "\033[0;31mfailed\033[0m. Something went wrong!"
+	
+
