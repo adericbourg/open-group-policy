@@ -63,18 +63,22 @@ class Motd(Plugin):
 	def installConf(self):
 		motd = str(self.pullFile('motd', True))
 		dist_e = self.currentConf.xpath(self.__motd_xpath)
+		prefix = '/home/alban/tmp/ogp/etc/'
 		if len(dist_e) != 0:
 			distro = dist_e[0].text
 		else:
 			distro = None
 
 		if distro == 'debian':
-			f = open('/home/alban/tmp/ogp/etc/motd.tail','w')
+			f = open(prefix + 'motd.tail','w')
 			f.write(motd)
 			f.close()
-			spawnl(P_WAIT, '/home/alban/tmp/ogp/etc/init.d/bootmisc.sh', 'start')
+			spawnl(P_WAIT, prefix + 'init.d/bootmisc.sh', 'start')
+			self.setSecurityAttributes('motd', prefix + 'motd.tail')
 		else:
-			f = open('/home/alban/tmp/ogp/etc/motd', 'w')
+			f = open(prefix + 'motd', 'w')
 			f.write(motd)
 			f.close()
+
+		self.setSecurityAttributes('motd', prefix + 'motd')
 

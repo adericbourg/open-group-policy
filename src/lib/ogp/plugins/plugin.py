@@ -176,7 +176,8 @@ class Plugin(object):
 		"""
 		# Default file stats (644)
 		mask = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH 
-		
+		# Default owner
+		own = {'uid':0, 'gid':0}
 		# Security attributes for fileName
 		xpath_sec_attr = OgpXmlConsts.TAG_FILES + '/' + OgpXmlConsts.TAG_FILE + "[@" + OgpXmlConsts.ATTR_FILE_NAME + "='" + fileName + "']" + \
 				'/' + OgpXmlConsts.TAG_SECURITY
@@ -199,24 +200,16 @@ class Plugin(object):
 					'gs':S_ISGID,
 					't': S_ISVTX
 				}
-		print oct(mask)
 		for attr in sec_e:
 			if attr.tag in OgpXmlConsts.TAGS_OWN:
-				if attr.tag == 'uid':
-					os.chown(filePath, int(attr.text), -1)
-				elif attr.tag == 'gid':
-					os.chown(filePath, -1, int(attr.text))
-				else:
-					pass
+				own[attr.tag] = int(attr.text)
 			elif attr.tag in OgpXmlConsts.TAGS_MOD:
-				print attr.tag + ": " + attr.text
 				if smart_bool(attr.text):
-					#print str(oct(mask)) + ' | ' + str(oct(mod_attr[attr.tag]))
 					mask = mask | mod_attr[attr.tag]
 				else:
-					#print str(oct(mask)) + ' & ~' + str(oct(mod_attr[attr.tag]))
 					mask = mask & ~(mod_attr[attr.tag])
-				print oct(mask)
+		os.chmod(filePath, mask)
+		os.chown(filePath, own['uid'], own['gid'])
 
 	# Abstract methods
 	def installConf(self):
