@@ -4,7 +4,9 @@
 from ldap.dn import str2dn, dn2str
 from lxml.etree import *
 from ogp.core import *
-
+from ogp.misc import *
+import os
+from stat import ST_MODE, S_IXUSR, S_IRUSR, S_IWUSR, S_IXGRP, S_IRGRP, S_IWGRP, S_IXOTH, S_IROTH, S_IWOTH, S_ISUID, S_ISGID, S_ISVTX
 
 class omitted(object):
 	pass
@@ -14,7 +16,8 @@ def setattr(self, item, value):
 		Plugin class and metaclass __setattr__ method
 		Throws an exception when attempting to modify the plugin name.
 	"""
-	if item == "name" or item == "files":
+	ro = ['name', 'files']
+	if item in ro:
 		raise OgpPluginError('__setattr__: ' + item + ' is readonly.')
 	self.__dict__[item] = value
 
@@ -35,11 +38,11 @@ class Plugin(object):
 	parentDn = None
 	currentConf = None
 	dn = None
-	__core = None
+	core = None
 	__registeredPlugins = dict()
 
 	def __init__(self, dn):
-		self.__core = OgpCore.getInstance()
+		self.core = OgpCore.getInstance()
 		self.dn = dn
 		# Dirty but it pleases Michel :-P
 		# Loads RW XML conf from LDAP
@@ -82,13 +85,13 @@ class Plugin(object):
 		"""
 			Commit changes to LDAP
 		"""
-		self.__core.pushPluginConf(self.dn, self.currentConf)
+		self.core.pushPluginConf(self.dn, self.currentConf)
 
 	def cancel(self):
 		"""
 			Do not commit and discard changes.
 		"""
-		self.currentConf = self.__core.pullPluginConf(self.dn, self.name)
+		self.currentConf = self.core.pullPluginConf(self.dn, self.name)
 		if self.currentConf is None:
 			self.currentConf = OgpElement.makePlugin(self.name, self.files)
 
@@ -134,7 +137,7 @@ class Plugin(object):
 				gid_e.blocking = blocking
 
 	def __getFile(self, fileName):
-		arg = '/' + OgpXmlConsts.TAG_PLUGIN + '/' + OgpXmlConsts.TAG_FILES + '/' + OgpXmlConsts.TAG_FILE + '[@' + OgpXmlConsts.ATTR_FILE_NAME + "='" + fileName + "']"
+		arg = OgpXmlConsts.TAG_FILES + '/' + OgpXmlConsts.TAG_FILE + '[@' + OgpXmlConsts.ATTR_FILE_NAME + "='" + fileName + "']"
 		try:
 			return self.currentConf.xpath(arg)[0]
 		except:
@@ -148,7 +151,7 @@ class Plugin(object):
 		file_e = self.__getFile(fileName)
 		sec_e = file_e.xpath(OgpXmlConsts.TAG_SECURITY)[0]
 		for tag in rights:
-			if tag in OgpXmlConsts.TAGS_SECURITY:
+			if tag in OgpXmlConsts.TAGS_MOD:
 				tag_e = sec_e.xpath(tag)
 				if len(tag_e) != 0:
 					tag_e = tag_e[0]
@@ -165,6 +168,55 @@ class Plugin(object):
 			else:
 				#TODO: log!
 				pass
+
+	def setSecurityAttributes(self, fileName, filePath):
+		"""
+			Reads attributes for file 'fileName' in XML tree and sets them
+			on file 'filePath'
+		"""
+		# Default file stats (644)
+		mask = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH 
+		
+		# Security attributes for fileName
+		xpath_sec_attr = OgpXmlConsts.TAG_FILES + '/' + OgpXmlConsts.TAG_FILE + "[@" + OgpXmlConsts.ATTR_FILE_NAME + "='" + fileName + "']" + \
+				'/' + OgpXmlConsts.TAG_SECURITY
+		parentConf = self.core.pullPluginConf(self.parentDn, self.name, fullTree=True)
+		if parentConf is None:
+			parentConf = OgpElement.makePlugin(self.name, self.files)
+		parentConf.merge(self.currentConf)
+		sec_e = parentConf.xpath(xpath_sec_attr)[0]
+		mod_attr = {
+					'ux':S_IXUSR, 
+					'ur':S_IRUSR,
+					'uw':S_IWUSR,
+					'gx':S_IXGRP,
+					'gr':S_IRGRP,
+					'gw':S_IWGRP,
+					'ox':S_IXOTH,
+					'or':S_IROTH,
+					'ow':S_IWOTH,
+					'us':S_ISUID,
+					'gs':S_ISGID,
+					't': S_ISVTX
+				}
+		print oct(mask)
+		for attr in sec_e:
+			if attr.tag in OgpXmlConsts.TAGS_OWN:
+				if attr.tag == 'uid':
+					os.chown(filePath, int(attr.text), -1)
+				elif attr.tag == 'gid':
+					os.chown(filePath, -1, int(attr.text))
+				else:
+					pass
+			elif attr.tag in OgpXmlConsts.TAGS_MOD:
+				print attr.tag + ": " + attr.text
+				if smart_bool(attr.text):
+					#print str(oct(mask)) + ' | ' + str(oct(mod_attr[attr.tag]))
+					mask = mask | mod_attr[attr.tag]
+				else:
+					#print str(oct(mask)) + ' & ~' + str(oct(mod_attr[attr.tag]))
+					mask = mask & ~(mod_attr[attr.tag])
+				print oct(mask)
 
 	# Abstract methods
 	def installConf(self):

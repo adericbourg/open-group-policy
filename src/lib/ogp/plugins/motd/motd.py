@@ -7,11 +7,10 @@ from os import spawnl, P_WAIT
 class Motd(Plugin):
 	name = "motd"
 	files = ['motd', 'motd.tail']
-	__motd_xpath = "/" + OgpXmlConsts.TAG_PLUGIN + "/" + OgpXmlConsts.TAG_FILES + "/" + \
-			OgpXmlConsts.TAG_FILE + "[@" + OgpXmlConsts.ATTR_FILE_NAME + "='motd']" #+ \
-			#"/" + OgpXmlConsts.TAG_CONF
-	__conf_xpath = "/" + OgpXmlConsts.TAG_PLUGIN + "/" + OgpXmlConsts.TAG_CONF 
-	__distro_xpath = "/" + OgpXmlConsts.TAG_PLUGIN + "/" + OgpXmlConsts.TAG_CONF + "/distro" 
+	__motd_xpath = OgpXmlConsts.TAG_FILES + "/" + OgpXmlConsts.TAG_FILE + \
+			"[@" + OgpXmlConsts.ATTR_FILE_NAME + "='motd']" 
+	__conf_xpath = OgpXmlConsts.TAG_CONF 
+	__distro_xpath = OgpXmlConsts.TAG_CONF + "/distro" 
 
 	def pushFile(self, file, content, blocking=False):
 		if file == 'motd.tail':
@@ -19,33 +18,19 @@ class Motd(Plugin):
 			file = 'motd'
 
 		if file == 'motd':
-			print xpath_arg
-			file_e = self.currentConf.xpath(self.__motd_xpath)[0]
+			file_e = self.currentConf.xpath(self.__motd_xpath + '/' + OgpXmlConsts.TAG_CONF)[0]
 			file_e.text = content
 			file_e.blocking = blocking
 
 	def pullFile(self, file, fullTree=False):
 		if fullTree:
-			parentConf = self.__core.pullPluginConf(self.parentDn, self.name, fullTree=True)
+			parentConf = self.core.pullPluginConf(self.parentDn, self.name, fullTree=True)
 			if parentConf is None:
 				parentConf = OgpElement.makePlugin(self.name, self.files)
 			parentConf.merge(self.currentConf)
-			return parentConf.xpath(self.__motd_xpath)[0].text
+			return parentConf.xpath(self.__motd_xpath + '/' + OgpXmlConsts.TAG_CONF)[0].text
 		else:
-			# Not working here. Got an XML root issue. 
-			# Got to fix it quickly!
-			print self.currentConf.toString()
-			print "---------------------------------------"
-			xp_test = "//plugin/files/file[@name='motd']"
-			print self.currentConf.xpath(xp_test)
-			tmp = fromstring(self.currentConf.toString())
-			tmp2 = tmp.xpath(self.__motd_xpath)
-			print tmp2
-			print tmp2[0]
-			#print (self.__motd_xpath)
-			#print self.currentConf.xpath("//plugin")
-			#return self.currentConf.xpath(self.__motd_xpath)[0].text
-			return
+			return self.currentConf.xpath(self.__motd_xpath + '/' + OgpXmlConsts.TAG_CONF)[0].text
 
 	def help(self, cmdName=None):
 		if cmdName is None:
@@ -65,7 +50,7 @@ class Motd(Plugin):
 				blocking = argv['blocking']
 			except:
 				blocking = False
-			dist_e = self.currentConf.xpath(self.__motd_xpath)
+			dist_e = self.currentConf.xpath(self.__distro_xpath)
 			if len(dist_e) == 0:
 				dist_e = Element('distro')
 				conf_e = self.currentConf.xpath(self.__conf_xpath)[0]
@@ -76,7 +61,7 @@ class Motd(Plugin):
 			dist_e.blocking = blocking
 
 	def installConf(self):
-		motd = self.pullFile('motd', True)
+		motd = str(self.pullFile('motd', True))
 		dist_e = self.currentConf.xpath(self.__motd_xpath)
 		if len(dist_e) != 0:
 			distro = dist_e[0].text
@@ -84,12 +69,12 @@ class Motd(Plugin):
 			distro = None
 
 		if distro == 'debian':
-			f = open('/etc/motd.tail','w')
+			f = open('/home/alban/tmp/ogp/etc/motd.tail','w')
 			f.write(motd)
 			f.close()
-			spawnl(P_WAIT, '/etc/init.d/bootmisc.sh', 'start')
+			spawnl(P_WAIT, '/home/alban/tmp/ogp/etc/init.d/bootmisc.sh', 'start')
 		else:
-			f = open('/etc/motd', 'w')
+			f = open('/home/alban/tmp/ogp/etc/motd', 'w')
 			f.write(motd)
 			f.close()
 
