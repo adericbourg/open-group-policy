@@ -160,8 +160,7 @@ class OgpCore(object):
 				except:
 					return None
 				
-			#DIRTY HACK: set <plugin name="..."> as root element
-			return fromstring(pConf.toString(), OGP_PARSER)
+			return pConf
 
 		def pushPluginConf(self, dn, pluginConf):
 			"""
