@@ -3,12 +3,14 @@
 
 from ogp.core import *
 from ogp.plugins import *
+import logging
 
 uri = "ldap://localhost:389"
 userDn = "cn=admin,dc=ogp"
 passwd = "toor"
 dn='cn=mac1,ou=titi,ou=tutu,dc=ogp'
 
+logging.basicConfig(filename='/home/nico/log.log', level=logging.DEBUG,format='%(asctime)s %(levelname)-8s %(message)s')
 # Connection
 core = OgpCore(uri, userDn, passwd)
 

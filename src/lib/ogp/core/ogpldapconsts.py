@@ -16,6 +16,7 @@ class OgpLDAPConsts:
 	ATTR_OBJECTSID			= "objectSid"
 	ATTR_OGPSOA				= "oGPSOA"
 	ATTR_MACHINECERTIFICATE	= "oGPMachineCertificate"
+	ATTR_USERPASSWORD = "userPassword"
 
 	VALUE_CONFIG			= "<ogp/>"
 	VALUE_SAMACCOUNTNAME	= "N/A"

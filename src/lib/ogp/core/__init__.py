@@ -3,3 +3,6 @@
 
 from ogpcore import *
 from ogpldapconsts import *
+import logging
+
+logging.debug('Loaded ogp.core.')

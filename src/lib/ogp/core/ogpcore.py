@@ -7,6 +7,10 @@ from ldap.dn import *
 from ogpldapconsts import *
 from lxml.etree import *
 from ogp.etree import *
+import logging
+import sys
+from hashlib import sha1
+from base64 import standard_b64encode
 
 class OgpCore(object):
 	"""
@@ -25,18 +29,29 @@ class OgpCore(object):
 		"""
 			Creates singleton instance
 		"""
+		logging.debug('OgpCore.__init__(uri=' + repr(uri) + ', dn=' + repr(dn) + ', passwd=****, certs=[not implemented])')
 		# Check whether we already have an instance
 		if OgpCore.__instance is None:
 			# Create and remember instance
-			OgpCore.__instance = OgpCore.__ogpcore(uri, dn, passwd, certs)
+			logging.info('OgpCore: connecting to ' + repr(uri) + ' with dn=' + repr(dn) + '...')
+			try:
+				OgpCore.__instance = OgpCore.__ogpcore(uri, dn, passwd, certs)
+			except:
+				logging.error('OgpCore: initialization failed with ' + repr(sys.exc_info()[1]) + '.')
+				OgpCore.__instance = None
+				raise
+		else:
+			logging.warning('OgpCore: already connected!')
 		# Store instance reference as the only member in the handle
 		self.__dict__['OgpCore__instance'] = OgpCore.__instance
 
 	def __getattr__(self, attr):
+		logging.debug('OgpCore.__getattr__(attr=' + repr(attr) + ')')
 		#	Delegate access to implementation
 		return getattr(self.__instance, attr)
 
 	def __setattr__(self, attr, value):
+		logging.debug('OgpCore.__setattr__(attr=' + repr(attr) + ', value=' + repr(value) + ')')
 		# Delegate access to implementation
 		return setattr(self.__instance, attr, value)
 
@@ -44,6 +59,7 @@ class OgpCore(object):
 		"""
 			Returns the core unique instance
 		"""
+		logging.debug('OgpCore.getInstance()')
 		return OgpCore.__instance
 	getInstance = staticmethod(getInstance)
 	
@@ -57,20 +73,28 @@ class OgpCore(object):
 				passwd: user password
 				certs: path to certs files (.pem)
 			"""
+			logging.debug('OgpCore.__ogpcore.__init__(uri=' + repr(uri) + ', dn=' + repr(dn) + ', passwd=****, certs=[not implemented])')
 			self.l = ldap.initialize(uri)
 			self.l.simple_bind_s(dn, passwd)
 
 		def __del__(self):
+			logging.debug('OgpCore.__ogpcore.__del__()')
 			#close LDAP connection before deleting the object
 			self.l.unbind_s()
 
-		def createOU(self, dn, description=None):
+		def createOU(self, dn, description=None, others={}):
 			"""
 				Creates an oGPOrganizationalUnit LDAP object and initializes it.
 				dn: the distinguished name of the targeted object
 				description (optionnal): an optional description of the object
 			"""
-			attrs = {}
+			logging.debug('OgpCore.__ogpcore.createOU(dn=' + repr(dn) + 'description=' + repr(description) + ', others=' + repr(others) + ')')
+			if description is not None:
+				logging.info('OgpCore: creating organizational unit  ' + repr(dn) + '( ' + description + ')')
+			else:
+				logging.info('OgpCore: creating organizational unit  ' + repr(dn) + '.')
+			
+			attrs = others
 			attrs['objectclass'] = OgpLDAPConsts.OBJECTCLASS_OU
 			attrs[OgpLDAPConsts.ATTR_OGPSOA] = OgpLDAPConsts.VALUE_OGPSOA
 			if description is not None:
@@ -78,12 +102,20 @@ class OgpCore(object):
 			attrs[OgpLDAPConsts.ATTR_CONFIG] = OgpLDAPConsts.VALUE_CONFIG
 			self.__add(dn, attrs) 
 
-		def createMachine(self, dn, others={}):
+		def createMachine(self, dn, passwd, description=None, others={}):
 			"""
 				Creates an oGPComputer LDAP object and initializes it.
 				dn: the distinguished name of the targeted object
+				passwd: the cleartext password for the machine
+				description (optionnal): an optional description of the object
 				others (optionnal) : other LDAP attributes
 			"""
+			logging.debug('OgpCore.__ogpcore.createMachine(dn=' + repr(dn) + ', others=' + repr(others) + ')')
+			if description is not None:
+				logging.info('OgpCore: creating organizational unit  ' + repr(dn) + '( ' + description + ')')
+			else:
+				logging.info('OgpCore: creating organizational unit  ' + repr(dn) + '.')
+			
 			attrs = others
 			attrs['objectClass'] = OgpLDAPConsts.OBJECTCLASS_MACHINE
 			attrs[OgpLDAPConsts.ATTR_OGPSOA] = OgpLDAPConsts.VALUE_OGPSOA
@@ -97,8 +129,14 @@ class OgpCore(object):
 				attrs[OgpLDAPConsts.ATTR_OBJECTSID]
 			except:
 				attrs[OgpLDAPConsts.ATTR_OBJECTSID] = OgpLDAPConsts.VALUE_OBJECTSID
+			s=sha1()
+			s.update(passwd)
+			attrs[OgpLDAPConsts.ATTR_USERPASSWORD] = "{SHA}" + standard_b64encode(s.digest())
 			
 			attrs[OgpLDAPConsts.ATTR_CONFIG] = OgpLDAPConsts.VALUE_CONFIG
+			if description is not None:
+				attrs[OgpLDAPConsts.ATTR_DESCRIPTION] = description
+
 			self.__add(dn, attrs)
 
 		def deleteDN(self, dn, fullTree=False):
@@ -107,6 +145,8 @@ class OgpCore(object):
 				dn: the distinguished name of the targeted object
 				fullTree: if set to True, deletion is recursive
 			"""
+			logging.debug('OgpCore.__ogpcore.deleteDn(dn=' + repr(dn), 'fullTree=' + repr(fullTree) + ')')
+			logging.info('OgpCore: deleting ' + repr(dn) + '(recursive: ' + repr(fullTree) + ').')
 			if fullTree: #recursively delete direct children before deleting dn itself
 				tree = self.l.search_s(dn, ldap.SCOPE_SUBTREE, '(objectclass=*)' ,[''])
 				for e in tree:
@@ -120,6 +160,7 @@ class OgpCore(object):
 				dn: the distinguished name of the targeted object
 				attrs: a list containing the requested attributes' names
 			"""
+			logging.debug('OgpCore.__ogpcore.pullAttributes(dn=' + repr(dn), 'attrs=' + repr(attrs) + ')')
 			return self.l.search_s(dn, ldap.SCOPE_BASE, attrlist=attrs)[0][1]
 
 		def pushDescription(self, dn, description):
@@ -128,7 +169,22 @@ class OgpCore(object):
 				dn: the distinguished name of the targeted object
 				description: the description
 			"""
+			logging.debug('OgpCore.__ogpcore.pushDescription(dn=' + repr(dn), 'description=' + repr(description) + ')')
+			logging.info('OgpCore: pushing description on ' + repr(dn) + '(description: ' + repr(fullTree) + ').')
 			mods = [(ldap.MOD_REPLACE, OgpLDAPConsts.ATTR_DESCRIPTION, description)]
+			self.__modify(dn, mods)
+
+		def pushPasswd(self, dn, passwd):
+			"""
+				Sets the OgpLDAPConsts.ATTR_USERPASSWORD LDAP attribute
+				dn    : the distinguished name of the targeted object
+				passwd: the cleartext password
+			"""
+			logging.debug('OgpCore.__ogpcore.pushPasswd(dn=' + repr(dn), 'passwd=****)')
+			logging.info('OgpCore: pushing userPasword on ' + repr(dn) + '.')
+			s=sha1()
+			s.update(passwd)
+			mods = [(ldap.MOD_REPLACE, OgpLDAPConsts.ATTR_DESCRIPTION, "{SHA}" + standard_b64encode(s.digest()))]
 			self.__modify(dn, mods)
 
 		def pullPluginConf(self, dn, pluginName, fullTree=False):
@@ -139,6 +195,7 @@ class OgpCore(object):
 				pluginName: the targeted plugin name
 				fullTree: if set to True, merges the conf from the baseDN up to the given DN
 			"""
+			logging.debug('OgpCore.__ogpcore.pullPluginConf(dn=' + repr(dn) + 'pluginName=' + repr(pluginName) + ', fullTree=' + repr(fullTree) + ')')
 			pConf = None
 			if fullTree:
 				dn=str2dn(dn)
@@ -168,6 +225,8 @@ class OgpCore(object):
 				dn: the distinguished name of the targeted object
 				pluginConf: a XML tree reprensenting the XML configuration. Its root must be <plugin name="[pluginName]">
 			"""
+			logging.debug('OgpCore.__ogpcore.pushPluginConf(dn=' + repr(dn) + 'pluginConf=' + pluginConf.toString() + ')')
+			logging.info('OgpCore: pushing conf for plugin ' + pluginName + ' on ' + repr(dn) + '.')
 			#replace current <plugin name="..." /> entry
 			pluginName = pluginConf.get(OgpXmlConsts.ATTR_PLUGIN_NAME)
 			currentConf = self.__pullConf(dn)
@@ -192,6 +251,7 @@ class OgpCore(object):
 				Returns a dict containing all the oGPSOA attributes from the baseDN up to the targeted object.
 				dn: the distinguished name of the targeted object
 			"""
+			logging.debug('OgpCore.__ogpcore.pullSOAs(dn=' + repr(dn) + ')')
 			SOAs = {}
 			dn=str2dn(dn)
 			dn.reverse()
@@ -210,6 +270,7 @@ class OgpCore(object):
 				identified by its DN, to install the configuration store in the LDAP.
 				dn: the distinguished name of the targeted object
 			"""
+			logging.debug('OgpCore.__ogpcore.getRequiredPlugins(dn=' + repr(dn) + ')')
 			plugins = []
 			dn=str2dn(dn)
 			dn.reverse()
@@ -227,18 +288,43 @@ class OgpCore(object):
 			return plugins
 		
 		def __add(self, dn, attrs):
-			ldif = modlist.addModlist(attrs)
-			self.l.add_s(dn,ldif)
+			logging.debug('OgpCore.__ogpcore.__add(dn=' + repr(dn) + ', attrs=' + repr(attrs) + ')')
+			try:
+				ldif = modlist.addModlist(attrs)
+				self.l.add_s(dn,ldif)
+			except:
+				logging.error('OgpCore: __add failed with ' + repr(sys.exc_info()[1]) + '.')
+				raise
 
 		def __modify(self, dn, mods):
-			self.l.modify_s(dn,mods)
+			logging.debug('OgpCore.__ogpcore.__modify(dn=' + repr(dn) + ', mods=' + repr(mods) + ')')
+			try:
+				self.l.modify_s(dn,mods)
+			except:
+				logging.error('OgpCore: __modify failed with ' + repr(sys.exc_info()[1]) + '.')
+				raise
 
 		def __delete(self, dn):
-			self.l.delete_s(dn)
+			logging.debug('OgpCore.__ogpcore.__delete(dn=' + repr(dn) + ')')
+			try:
+				self.l.delete_s(dn)
+			except:
+				logging.error('OgpCore: __delete failed with ' + repr(sys.exc_info()[1]) + '.')
+				raise
 
 		def __pullConf(self, dn):
-			return fromstring(self.pullAttributes(dn,[OgpLDAPConsts.ATTR_CONFIG])[OgpLDAPConsts.ATTR_CONFIG][0], OGP_PARSER)
+			logging.debug('OgpCore.__ogpcore.__pullConf(dn=' + repr(dn) + ')')
+			try:
+				return fromstring(self.pullAttributes(dn,[OgpLDAPConsts.ATTR_CONFIG])[OgpLDAPConsts.ATTR_CONFIG][0], OGP_PARSER)
+			except:
+				logging.error('OgpCore: __pullConf failed with ' + repr(sys.exc_info()[1]) + '.')
+				raise
 
 		def __pullSOA(self, dn):
-			return int(self.pullAttributes(dn, [OgpLDAPConsts.ATTR_OGPSOA])[OgpLDAPConsts.ATTR_OGPSOA][0])
-		
+			logging.debug('OgpCore.__ogpcore.__pullSOA(dn=' + repr(dn) + ')')
+			try:
+				return int(self.pullAttributes(dn, [OgpLDAPConsts.ATTR_OGPSOA])[OgpLDAPConsts.ATTR_OGPSOA][0])
+			except:
+				logging.error('OgpCore: __pullSOA failed with ' + repr(sys.exc_info()[1]) + '.')
+				raise
+

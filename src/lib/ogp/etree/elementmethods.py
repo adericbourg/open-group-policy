@@ -5,8 +5,10 @@ from lxml.etree import *
 from copy import deepcopy
 from ogpxmlconsts import *
 from ogp.misc import *
+import logging
 
 def Element(name):
+	logging.debug('Element(name=' + repr(name) + ')')
 	OGP_PARSER = XMLParser()
 	OGP_PARSER.set_element_class_lookup(ElementDefaultClassLookup(element=OgpElement))
 	return OGP_PARSER.makeelement(name)
@@ -34,6 +36,7 @@ class OgpElement(ElementBase):
 			If target attribute is text, deletes all subelements.
 			If targeted attribue is tail, forces value to None
 		"""
+		logging.debug('OgpElement.__setattr__(item=' + repr(item) + ', value=' + repr(value) + ')')
 		if item == "text" and value is not None:
 			self.delElements()
 		if item == "tail":
@@ -47,6 +50,7 @@ class OgpElement(ElementBase):
 			Protects the 'attrib' attributes by returning a copy instead of the real object.
 			This returns a dict instance, not an _Attrib, but it seems to work
 		"""
+		logging.debug('OgpElement.__getattr__(item=' + repr(item) + ')')
 		if item == "attrib":
 			return dict(ElementBase.__getattribute__(self, item))
 		else:
@@ -56,6 +60,7 @@ class OgpElement(ElementBase):
 		"""
 			Provides a private property to access the real 'attrib' attribute.
 		"""
+		logging.debug('OgpElement.__getRealAttrib()')
 		return ElementBase.__getattribute__(self, "attrib")
 	__attrib = property(__getRealAttrib)
 
@@ -63,6 +68,7 @@ class OgpElement(ElementBase):
 		"""
 			Returns the attributes dict(), without the OgpXmlConsts.ATTR_BLOCK ('block') attribute.
 		"""
+		logging.debug('OgpElement.__getAttributes()')
 		res = dict()
 		for key in self.attrib:
 			if key != OgpXmlConsts.ATTR_BLOCK:
@@ -74,6 +80,7 @@ class OgpElement(ElementBase):
 		"""
 			A more convenient way to access the OgpXmlConsts.ATTR_BLOCK ('block') special attribute.
 		"""
+		logging.debug('OgpElement.__getBlocking()')
 		b = self.get(OgpXmlConsts.ATTR_BLOCK)
 		if b is None:
 			return False
@@ -84,7 +91,7 @@ class OgpElement(ElementBase):
 		"""
 			Sets the OgpXmlConsts.ATTR_BLOCK ('block') special attribute.
 		"""
-		assert isinstance(blocking, bool)
+		logging.debug('OgpElement.__setBlocking(blocking=' + repr(blocking) + ')')
 		if blocking:
 			self.__attrib[OgpXmlConsts.ATTR_BLOCK] = str(blocking).lower()
 		else:
@@ -98,6 +105,7 @@ class OgpElement(ElementBase):
 		"""
 			Removes any child
 		"""
+		logging.debug('OgpElement.delElements()')
 		for e in self:
 			self.remove(e)
 
@@ -105,7 +113,7 @@ class OgpElement(ElementBase):
 		"""
 			Checks if no child element has the same name and the same attributes,
 		"""
-		assert isinstance(elt, OgpElement)
+		logging.debug('OgpElement.__checkUnicity(elt=' + repr(elt) + ')')
 		for e in self:
 			if e.tag == elt.tag and e.attributes == elt.attributes:
 				return False
@@ -116,7 +124,7 @@ class OgpElement(ElementBase):
 			Works as the standard function, but if newChild is an Element, 
 			checks unicity before adding, and deletes text
 		"""
-		assert isinstance(newChild, OgpElement)
+		logging.debug('OgpElement.append(newChild=' + repr(newChild) + ')')
 		if (not self.__checkUnicity(newChild)):raise OgpXmlError('append: element is not unique.')
 		self.text = None
 		ElementBase.append(self, newChild)
@@ -126,9 +134,7 @@ class OgpElement(ElementBase):
 			Works as the standard function, but if newChild is an Element, but 
 			checks unicity before adding, and deletes text.
 		"""
-		assert isinstance(newChild, OgpElement)
-		assert isinstance(index, int)
-
+		logging.debug('OgpElement.insert(index=' + repr(index) + ', newChild=' + repr(newChild) + ')')
 		if (not self.__checkUnicity(newChild)):raise OgpXmlError('insert: element is not unique.')
 		self.text = None
 		ElementBase.insert(self, index, element)
@@ -138,8 +144,8 @@ class OgpElement(ElementBase):
 			Works as the standard function, but if newChild is an Element, but
 			checks unicity before adding, and deletes text.
 		"""
+		logging.debug('OgpElement.extend(elements=' + repr(elements) + ')')
 		for element in elements:
-			assert isinstance(element, OgpElement)
 			if (not self.__checkUnicity(element)):raise OgpXmlError('extend: element is not unique.')
 		self.text = None
 		ElementBase.extend(self, elements) 
@@ -150,8 +156,7 @@ class OgpElement(ElementBase):
 			Works as the standard function, but if newChild is an Element, but
 			checks that self will still be unique after setting the attribute.
 		"""
-		assert isinstance(name, str)
-		assert isinstance(value, str)
+		logging.debug('OgpElement.set(name=' + repr(name) + ', value=' + repr(value) + ')')
 		#Computation of new attribute list
 		newattrs=self.attributes
 		newattrs[name] = value
@@ -169,8 +174,7 @@ class OgpElement(ElementBase):
 			Merges self with peer. Peer is considered as the "child" conf (LDAP speaking), so that it has precendence on self.
 			See plugin documentation for further details on the algorithm
 		"""
-		assert isinstance(peer, OgpElement)
-
+		logging.debug('OgpElement.merge()')
 		#if self and peer are not exactly the same (i.e. same name and same attributes),
 		#raise OgpXmlError.
 		if self.tag != peer.tag or self.attributes != peer.attributes:
@@ -218,8 +222,7 @@ class OgpElement(ElementBase):
 				e.merge(deepcopy(peerCommon[k]))
 
 	def __reorder_ids(self, peer):
-		assert isinstance(peer, OgpElement)
-
+		logging.debug('OgpElement.__reorder_ids(peer=' + repr(peer) + ')')
 		peerMaxId = 0
 		if len(peer) > 0 and len(self) > 0:
 			for e in peer:
@@ -233,12 +236,14 @@ class OgpElement(ElementBase):
 					e.set(OgpXmlConsts.ATTR_ID, str(int(id) + peerMaxId + 1))
 
 	def toString(self, xsl=None, params=None):
+		logging.debug('OgpElement.__reorder_ids(xsl=' + repr(xsl) + ', params=' + repr(params) + ')')
 		if xsl is None:
 			return tostring(self)
 		else:
 			self.__processXsl(xsl, params)
 
 	def __processXsl(self, xsl, params):
+		logging.debug('OgpElement.__processXsl(xsl=' + repr(xsl) + ', params=' + repr(params) + ')')
 		transform = XSLT(xsl)
 		if params is None:
 			return str(transform(self))
@@ -246,6 +251,12 @@ class OgpElement(ElementBase):
 			return str(transform(self), params)
 
 	def __makePlugin(name, fileNames):
+		"""
+			Creates a standard XML plugin tree, with the specified <file> sections
+			name: the plugin name
+			fileNames: the list of the desired files
+		"""
+		logging.debug('OgpElement.__makePlugin(name=' + repr(name) + ', fileNames=' + repr(fileNames) + ')')
 		res = Element(OgpXmlConsts.TAG_PLUGIN)
 		res.set(OgpXmlConsts.ATTR_PLUGIN_NAME, name)
 		res.append(Element(OgpXmlConsts.TAG_CONF))
@@ -258,6 +269,11 @@ class OgpElement(ElementBase):
 	makePlugin = staticmethod(__makePlugin)
 
 	def __makeFile(name):
+		"""
+			Creates a standard XML file tree.
+			name: the file name
+		"""
+		logging.debug('OgpElement.__makeFile(name=' + repr(name) + ')')
 		res = Element(OgpXmlConsts.TAG_FILE)
 		res.set(OgpXmlConsts.ATTR_FILE_NAME, name)
 		res.append(Element(OgpXmlConsts.TAG_CONF))
@@ -270,8 +286,8 @@ class OgpXmlError(Exception):
 		OGP XML error class.
 	"""
 	def __init__(self, value):
-		assert isinstance(value, str)
 		self.value = value
+		logging.error(str(self))
 	
 	def __str__(self):
 					return repr("OgpXmlError: " + self.value)

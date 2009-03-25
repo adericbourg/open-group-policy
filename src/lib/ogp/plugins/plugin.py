@@ -7,6 +7,7 @@ from ogp.core import *
 from ogp.misc import *
 import os
 from stat import ST_MODE, S_IXUSR, S_IRUSR, S_IWUSR, S_IXGRP, S_IRGRP, S_IWGRP, S_IXOTH, S_IROTH, S_IWOTH, S_ISUID, S_ISGID, S_ISVTX
+import logging
 
 class omitted(object):
 	pass
@@ -16,6 +17,7 @@ def setattr(self, item, value):
 		Plugin class and metaclass __setattr__ method
 		Throws an exception when attempting to modify the plugin name.
 	"""
+	logging.debug('setattr(self=' + repr(self) + ', item=' + repr(item) + ', value=' + repr(value) + ')')
 	ro = ['name', 'files']
 	if item in ro:
 		raise OgpPluginError('__setattr__: ' + item + ' is readonly.')
@@ -31,10 +33,10 @@ class Plugin(object):
 	"""
 		Provides plugins' base class and plugin registration mechanism.
 	"""
+	__metaclass__ = M_Plugin
 	
 	name = None # the plugin name
 	files = []
-	__metaclass__ = M_Plugin
 	parentDn = None
 	currentConf = None
 	dn = None
@@ -42,6 +44,7 @@ class Plugin(object):
 	__registeredPlugins = dict()
 
 	def __init__(self, dn):
+		logging.debug('Plugin.__init__(dn=' + repr(dn) + ')')
 		self.core = OgpCore.getInstance()
 		self.dn = dn
 		# Dirty but it pleases Michel :-P
@@ -58,6 +61,7 @@ class Plugin(object):
 		"""
 			returns a plugin class from a name.
 		"""
+		logging.debug('Plugin.getPluginFromName(name=' + repr(name) + ')')
 		return Plugin.__registeredPlugins[name]
 	getPluginFromName = staticmethod(__getPluginFromName)
 
@@ -66,6 +70,7 @@ class Plugin(object):
 			Registers a plugin class.
 			Plugins should register themselves in their __init__.py using Plugin.registerPlugin([pluginClass]).
 		"""
+		logging.debug('Plugin.__registerPlugin(pluginClass=' + repr(pluginClass) + ')')
 		try:
 			Plugin.__registeredPlugins[pluginClass.name]
 			raise OgpPluginError("registerPlugin: duplicated plugin name '" + pluginClass.name + "'.")
@@ -78,19 +83,24 @@ class Plugin(object):
 		"""
 			Returns a dict() containing all the registered plugin classes
 		"""
+		logging.debug('Plugin.__getRegisteredPlugins()')
 		return Plugin.__registeredPlugins.copy()
 	getRegisteredPlugins = staticmethod(__getRegisteredPlugins)
 	
 	def update(self):
 		"""
-			Commit changes to LDAP
+			Commits changes to LDAP
 		"""
+		logging.debug('Plugin.update()')
+		logging.info('Plugin: commiting changes to LDAP.')
 		self.core.pushPluginConf(self.dn, self.currentConf)
 
 	def cancel(self):
 		"""
 			Do not commit and discard changes.
 		"""
+		logging.debug('Plugin.canel()')
+		logging.info('Plugin: discarding changes.')
 		self.currentConf = self.core.pullPluginConf(self.dn, self.name)
 		if self.currentConf is None:
 			self.currentConf = OgpElement.makePlugin(self.name, self.files)
@@ -101,6 +111,8 @@ class Plugin(object):
 			Changes owner, changes the user and/or group ownership of 
 			the given file
 		"""
+		logging.debug('Plugin.chown(fileName=' + repr(fileName) + ', uid=' + repr(uid) + ', gid=' + repr(gid) + ', blocking=' + repr(blocking) + ')')
+		logging.debug('Plugin: setting owner/group on file' + repr(fileName) + ' (uid=' + repr(uid) + ', gid=' + repr(gid) + ', blocking=' + repr(blocking) + ')')
 		file_e = self.__getFile(fileName)
 		sec_e = file_e.xpath(OgpXmlConsts.TAG_SECURITY)[0]
 
@@ -137,6 +149,11 @@ class Plugin(object):
 				gid_e.blocking = blocking
 
 	def __getFile(self, fileName):
+		"""
+			Returns the XML tree corresponding to a given file name
+			fileName: the targeted file name
+		"""
+		logging.debug('Plugin.__getFile(fileName=' + repr(fileName) + ')')
 		arg = OgpXmlConsts.TAG_FILES + '/' + OgpXmlConsts.TAG_FILE + '[@' + OgpXmlConsts.ATTR_FILE_NAME + "='" + fileName + "']"
 		try:
 			return self.currentConf.xpath(arg)[0]
@@ -148,6 +165,8 @@ class Plugin(object):
 		"""
 			Changes the permissions of the given file according to mode
 		"""
+		logging.debug('Plugin.chmod(fileName=' + repr(fileName) + ', rights=' + repr(rights)  + ', blocking=' + repr(blocking) + ')')
+		logging.debug('Plugin: setting permissions on file' + repr(fileName) + ' (permissions=' + repr(rights) + ', blocking=' + repr(blocking) + ')')
 		file_e = self.__getFile(fileName)
 		sec_e = file_e.xpath(OgpXmlConsts.TAG_SECURITY)[0]
 		for tag in rights:
@@ -174,6 +193,8 @@ class Plugin(object):
 			Reads attributes for file 'fileName' in XML tree and sets them
 			on file 'filePath'
 		"""
+		logging.debug('Plugin.setSecurityAttributes(fileName=' + repr(fileName) + ', filePath=' + repr(filePath) + ')')
+		logging.debug('Plugin: setting security attributes on file ' + repr(filePath) + ' from ' + repr(fileName) + 'file section.')
 		# Default file stats (644)
 		mask = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH 
 		# Default owner
@@ -259,8 +280,8 @@ class OgpPluginError(Exception):
 		OGP plugin error class.
 	"""
 	def __init__(self, value):
-		assert isinstance(value, str)
 		self.value = value
+		logging.error(str(self))
 	
 	def __str__(self):
 		return repr("OgpPluginError: " + self.value)

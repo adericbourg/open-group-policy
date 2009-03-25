@@ -3,6 +3,7 @@
 
 from ogp.plugins.plugin import *
 from os import spawnl, P_WAIT
+import logging
 
 class Motd(Plugin):
 	name = "motd"
@@ -13,8 +14,10 @@ class Motd(Plugin):
 	__distro_xpath = OgpXmlConsts.TAG_CONF + "/distro" 
 
 	def pushFile(self, file, content, blocking=False):
+		logging.debug('Motd.pushFile(file=' + repr(file) + ', content=' + repr(content) + ', blocking=' + repr(blocking) + ')')
+		logging.debug('Motd: pushing file ' + repr(file) + '(blocking=' + repr(blocking) + ')')
 		if file == 'motd.tail':
-			print "motd.tail should not be edited! Editing motd..."
+			logging.warning('Motd.pushFile: motd.tail should not be edited! Editing motd...')
 			file = 'motd'
 
 		if file == 'motd':
@@ -23,6 +26,7 @@ class Motd(Plugin):
 			file_e.blocking = blocking
 
 	def pullFile(self, file, fullTree=False):
+		logging.debug('Motd.pullFile(file=' + repr(file) + ', fullTree=' + repr(fullTree) + ')')
 		if fullTree:
 			parentConf = self.core.pullPluginConf(self.parentDn, self.name, fullTree=True)
 			if parentConf is None:
@@ -33,6 +37,7 @@ class Motd(Plugin):
 			return self.currentConf.xpath(self.__motd_xpath + '/' + OgpXmlConsts.TAG_CONF)[0].text
 
 	def help(self, cmdName=None):
+		logging.debug('Motd.help(cmdName=' + repr(cmdName) + ')')
 		if cmdName is None:
 			return {'setdistro': "Sets distribution name."}
 		elif cmdName == 'setdistro':
@@ -42,6 +47,8 @@ class Motd(Plugin):
 			raise OgpPluginError('help: unknown command (' + cmdName + ')')
 
 	def runCommand(self, cmdName, argv):
+		logging.debug('Motd.runCommand(cmdName=' + repr(cmdName) + ', argv=' + repr(argv) + ')')
+		logging.info('Motd: running command ' + repr(cmdName) + '(arguments: ' + repr(argv) + ')')
 		if cmdName != 'setdistro':
 			raise OgpPluginError('runCommand: unknown command (' + cmdName + ')')
 		else:
@@ -61,6 +68,8 @@ class Motd(Plugin):
 			dist_e.blocking = blocking
 
 	def installConf(self):
+		logging.debug('Motd.installConf()')
+		logging.info('Motd: installing conf.')
 		motd = str(self.pullFile('motd', True))
 		dist_e = self.currentConf.xpath(self.__motd_xpath)
 		prefix = '/home/alban/tmp/ogp/etc/'

@@ -3,6 +3,7 @@
 
 from ogp.plugins.plugin import *
 from os import spawnl, P_WAIT
+import logging
 
 class OgpDaemon(Plugin):
 	name = "ogpdaemon"
@@ -12,12 +13,15 @@ class OgpDaemon(Plugin):
 	__conf_xpath = OgpXmlConsts.TAG_CONF 
 
 	def pushFile(self, file, content, blocking=False):
+		logging.debug('OgpDaemon.pushFile(file=' + repr(file) + ', content=' + repr(content) + ', blocking=' + repr(blocking) + ')')
 		raise OgpPluginError("pushFile: OgpDaemon has no files! You're useless buddy!")
 
 	def pullFile(self, file, fullTree=False):
+		logging.debug('OgpDaemon.pullFile(file=' + repr(file) + ', fullTree=' + repr(fullTree) + ')')
 		raise OgpPluginError("pullFile: OgpDaemon has no files! You're useless buddy!")
 
 	def help(self, cmdName=None):
+		logging.debug('Motd.help(cmdName=' + repr(cmdName) + ')')
 		if cmdName is None:
 			return {'setparam': "Sets a parameter.",'setparam': "Gets a parameter."}
 		elif cmdName == 'setparam':
@@ -34,6 +38,8 @@ class OgpDaemon(Plugin):
 			raise OgpPluginError("help: unknown command '" + cmdName + "'")
 
 	def runCommand(self, cmdName, argv):
+		logging.debug('OgpDaemon.runCommand(cmdName=' + repr(cmdName) + ', argv=' + repr(argv) + ')')
+		logging.info('OgpDaemon: running command ' + repr(cmdName) + '(arguments: ' + repr(argv) + ')')
 		if cmdName == 'setparam':
 			self.__setParam(argv['param'], argv['value'])
 			return None
@@ -43,6 +49,9 @@ class OgpDaemon(Plugin):
 			raise OgpPluginError("runCommand: unknown command '" + cmdName +"'")
 
 	def installConf(self):
+		logging.debug('OgpDaemon.installConf()')
+		logging.info('OgpDaemon: retrieving conf.')
+
 		local = {}
 		remote = {}
 		for p in self.__localParams:
@@ -52,6 +61,7 @@ class OgpDaemon(Plugin):
 		return {'local':local,'remote':remote}
 
 	def __getParam(self, param, fullTree=False):
+		logging.debug('OgpDaemon.__getParam(param=' + repr(param) + ', fullTree=' + repr(fullTree) + ')')
 		defaults = {
 				'updateOnStartup':'true', 
 				'timeBetweenUpdates':'15',
@@ -81,6 +91,8 @@ class OgpDaemon(Plugin):
 
 
 	def __setParam(self, param, value):
+		logging.debug('OgpDaemon.__setParam(param=' + repr(param) + ', value=' + repr(value) + ')')
+		logging.debug('OgpDaemon: setting param' + repr(param) + ' to ' + repr(value) + '.')
 		if (param not in self.__localParams) and (param not in self.__remoteParams):
 			raise OgpPluginError("__setParam: unknown parameter '" + param + "'")
 		xpath = self.__conf_xpath + '/' + param
