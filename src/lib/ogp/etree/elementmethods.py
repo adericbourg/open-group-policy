@@ -131,7 +131,7 @@ class OgpElement(ElementBase):
 
 	def insert(self, index, newChild):
 		"""
-			Works as the standard function, but if newChild is an Element, but 
+			Works as the standard function, but if newChild is an Element,  
 			checks unicity before adding, and deletes text.
 		"""
 		logging.debug('OgpElement.insert(index=' + repr(index) + ', newChild=' + repr(newChild) + ')')
@@ -141,7 +141,7 @@ class OgpElement(ElementBase):
 
 	def extend(self, elements):
 		"""
-			Works as the standard function, but if newChild is an Element, but
+			Works as the standard function, but if newChild is an Element, 
 			checks unicity before adding, and deletes text.
 		"""
 		logging.debug('OgpElement.extend(elements=' + repr(elements) + ')')
@@ -151,9 +151,8 @@ class OgpElement(ElementBase):
 		ElementBase.extend(self, elements) 
 
 	def set(self, name, value):
-		#TODO: make a 'real' sentence in the description
 		"""
-			Works as the standard function, but if newChild is an Element, but
+			Works as the standard function, but if newChild is an Element, 
 			checks that self will still be unique after setting the attribute.
 		"""
 		logging.debug('OgpElement.set(name=' + repr(name) + ', value=' + repr(value) + ')')
