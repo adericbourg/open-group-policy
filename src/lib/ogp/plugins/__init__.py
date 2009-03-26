@@ -7,7 +7,6 @@ from os.path import dirname,isdir,join
 from os import listdir
 from imp import *
 from sys import stderr
-import logging
 
 # Load plugins
 path = dirname(resource_filename(__name__, '__init.py__'))
@@ -15,8 +14,5 @@ for d in listdir(path):
 	if isdir(join(path,d)):
 		try:
 			load_package('ogp.plugins.' + d, join(path,d))
-			logging.debug('ogp.plugins: loaded plugin ' + repr(d) + '.')
 		except:
-			logging.warning('ogp.plugins: failed to load plugin ' + repr(d) + '.')
-
-logging.debug('Loaded ogp.plugins.')
+			stderr.write('ogp.plugins: failed to load plugin ' + repr(d) + '.')
