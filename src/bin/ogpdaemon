@@ -12,6 +12,8 @@ import os
 LOG_FILE = '/var/log/ogpdaemon.log'
 CONF_FILE = '/etc/ogpdaemon.conf'
 SOAS_FILE = '/etc/ogpdaemon.soas'
+
+
 CONF_REGEXP='^(?P<key>([a-zA-Z]\w*))\s*=\s?(?P<value>(.*))$'
 SOAS_REGEXP='^(?P<key>([^\s]*))\s*=\s?(?P<value>(.*))$'
 LOCAL_PARAMETERS = ['uri', 'dn', 'passwd']
@@ -154,7 +156,7 @@ def installConf(core):
 				logging.warning('Configuration installation for plugin %s failed with %s.' % (pluginName, sys.exc_info()[1]))
 						
 
-#initialization
+#initialization before fork
 #getting options from command line
 (reload, loglevel) = parse_opts()
 
@@ -194,12 +196,12 @@ except:
 	logging.error("OgpDaemon: startup failed with %s" % sys.exc_info()[1])
 	exit(1)
 
+# if running as daemon, fork after initialization
 if not reload:
 	try:
 		pid = os.fork()
 	except:
 		print "totopass"
-	
 	if pid != 0:
 		print pid
 		exit(0)
