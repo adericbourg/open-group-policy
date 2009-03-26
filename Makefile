@@ -3,9 +3,9 @@ exec_prefix=$(prefix)
 
 PYTHON_LIB=$(prefix)/lib/python2.5
 INITD=/etc/init.d
-SBIN=/usr/sbin
+SBIN=$(prefix)/sbin
 PYTHON=`which python`
-PYTHON_FLAGS=-mcompileall
+FLAG_COMPILE_PY=-mcompileall
 
 OGPLIB=src/lib/ogp
 OGPBIN=src/bin
@@ -17,7 +17,7 @@ bin_path=$(SBIN)/$(DAEMON_NAME)
 all: binaries
 
 binaries:
-	$(PYTHON) $(PYTHON_FLAGS) $(OGPLIB)
+	$(PYTHON) $(FLAG_COMPILE_PY) $(OGPLIB)
 
 install: install-libs install-daemon
 
@@ -42,7 +42,7 @@ install-daemon-bin:
 	@chmod 755 $(bin_path)
 	@chown 0:0 $(bin_path)
 
-.PHONY: config clean mrproper
+.PHONY: config clean mrproper 
 
 config:
 
