@@ -16,7 +16,11 @@ binaries:
 install: install-libs
 
 install-libs:
-	@cp -rf $(OGPLIB) ~/tmp
+	@if [ ! -f $(PYTHON_LIB)/ogp ]; then \
+		mkdir $(PYTHON_LIB)/ogp;\
+	fi
+	@cd $(OGPLIB);\
+	tar -cf - --exclude='.svn' * |  tar --no-same-owner -xf - -C $(PYTHON_LIB)/ogp
 
 .PHONY: config clean mrproper
 
