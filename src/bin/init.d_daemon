@@ -12,9 +12,9 @@
 #	
 
 PATH="/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin"
-PIDFILE="/home/nico/ogpdaemon.pid"
-DAEMON="./ogpdaemon"
-NAME="OGP daemon"
+PIDFILE="/var/run/ogpdaemon.pid"
+DAEMON="/usr/sbin/ogpdaemon"
+NAME="ogpdaemon"
 
 set -e
 
