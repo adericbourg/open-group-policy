@@ -58,7 +58,7 @@ def parse_opts():
 	except:
 		usage()
 		sys.exit(2)
-	loglevels=[logging.WARNING, logging.INFO, logging.DEBUG]
+	loglevels=[logging.INFO, logging.WARNING, logging.DEBUG]
 	
 	loglevel=0
 	reload=False

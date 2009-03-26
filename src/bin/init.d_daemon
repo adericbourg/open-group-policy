@@ -16,11 +16,13 @@ PIDFILE="/home/nico/ogpdaemon.pid"
 DAEMON="./ogpdaemon"
 NAME="OGP daemon"
 
-
 set -e
 
 error() {
 	echo $1
+	if [ -f "$PIDFILE" ];then
+		rm "$PIDFILE"
+	fi
 	exit 1
 }
 
@@ -31,11 +33,7 @@ case $1 in
 			exit 1
 		fi
 		echo -n "Starting $NAME... "
-		$DAEMON > $PIDFILE
-		if [ -z `cat "$PIDFILE"` ];then
-			rm "$PIDFILE"
-			error "failed!"
-		fi
+		$DAEMON > $PIDFILE || error "failed!"
 		echo "OK."
 		exit 0
 	;;
