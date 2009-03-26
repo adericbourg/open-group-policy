@@ -1,33 +1,194 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*
 
-from ogp.core import *
-from ogp.plugins import *
 import logging
+from ogp.core import *
+import sys
+from getopt import getopt
+import re
+from time import sleep
 
-uri = "ldap://localhost:389"
-userDn = "cn=admin,dc=ogp"
-passwd = "toor"
-dn='cn=mac1,ou=titi,ou=tutu,dc=ogp'
+LOG_FILE = '/var/log/ogpdaemon.log'
+CONF_FILE = '/etc/ogpdaemon.conf'
+SOAS_FILE = '/etc/ogpdaemon.soas'
+CONF_REGEXP='^(?P<key>([a-zA-Z]\w*))\s*=\s?(?P<value>(.*))$'
+SOAS_REGEXP='^(?P<key>([^\s]*))\s*=\s?(?P<value>(.*))$'
+LOCAL_PARAMETERS = ['uri', 'dn', 'passwd']
 
-logging.basicConfig(filename='/home/nico/log.log', level=logging.DEBUG,format='%(asctime)s %(levelname)-8s %(message)s')
-# Connection
-core = OgpCore(uri, userDn, passwd)
+def checkSOAs():
+	"""
+		Checks if a conf update is needed by comparing local and remote SOAs.
+		Returns False and stores new SOAs if an update is needed.
+	"""
+	oldSOAs={}
+	try:
+		f = open(SOAS_FILE, 'r')
+		p=re.compile(SOAS_REGEXP)
+		for l in f.readlines():
+			c = p.findall(l)
+			try:
+				key = c[0][0]
+				val = c[0][2]
+				oldSOAs[key] = int(val)
+			except:
+				pass
+		f.close()
+	except:
+		pass
+	
+	currentSOAs = core.pullSOAs(dn)
+	print oldSOAs
+	print currentSOAs
+	if currentSOAs != oldSOAs:
+		f = open(SOAS_FILE, 'w')
+		lines = []
+		for k in currentSOAs:
+			lines.append( "%s = %s\n" % (k, currentSOAs[k]))
+		f.writelines(lines)
+		f.close()
+		return False
+	else:
+		return True
 
+def parse_opts():
+	"""
+		Parses CL options and returns (loglevel, reload)
+	"""
+	try:
+		opts = getopt(sys.argv[1:], 'vrh', ['verbose', 'reload-conf', 'help'])[0]
+	except:
+		usage()
+		sys.exit(2)
+	loglevels=[logging.WARNING, logging.INFO, logging.DEBUG]
+	
+	loglevel=0
+	reload=False
 
-
-requiredPlugins=core.getRequiredPlugins(dn)
-for pluginName in requiredPlugins:
-	if pluginName != 'ogpdaemon':
-		print "Installing conf for plugin '" + pluginName + "'...",
-		try:
-			pluginClass = Plugin.getPluginFromName(pluginName)
-			pluginInstance = pluginClass(dn)
-			pluginInstance.installConf()
-			print "\033[0;32mOK\033[0m."
-		except KeyError:
-			print "\033[0;31mfailed\033[0m. Plugin '" + pluginName + "' is missing!"
-		except:
-			print "\033[0;31mfailed\033[0m. Something went wrong!"
+	for o in opts:
+		opt = o[0]
+		if opt in ['-h', '--help']:
+			usage()
+			sys.exit()
+		elif opt in ['-v', '--verbose']:
+				loglevel = loglevel + 1
+		elif opt in ['-r', '--reload-conf']:
+			reload = True
 		
+	if loglevel > 2:
+		loglevel = 2
+	return (reload, loglevels[loglevel])	
 
+def usage():
+	"""
+		Prints available CL options
+	"""
+	print "Usage: %s [ -h | --help] [ -r | --reload-conf ] [ -v | --verbose]" % sys.argv[0]
+	print "  -h | --help        : print this and stop."
+	print "  -r | --reload-conf : do not run as daemon, just reload configuration."
+	print "  -v | --verbose     : increase log verbosity."
+	quit()
+
+def load_conf():
+	"""
+		Reads conf from local file
+	"""
+	conf={}
+	p=re.compile(CONF_REGEXP)
+	f=open(CONF_FILE, 'r')
+	for l in f.readlines():
+		c = p.findall(l)
+		try:
+			key = c[0][0]
+			val = c[0][2]
+			conf[key] = val
+		except:
+			pass
+	f.close()
+	return conf
+
+def save_conf(conf):
+	f = open(CONF_FILE, 'w')
+	lines = []
+	for k in conf:
+		if k in LOCAL_PARAMETERS:
+			lines.append( "%-6s = %s\n" % (k, conf[k]))
+	f.writelines(lines)
+	f.close()
+
+def installConf(core):
+	# if SOAS didnt change, do't do anything
+	print checkSOAs()
+	if not checkSOAs():
+		logging.info("SOAs didn't change, so skipping configuration installation.")
+		return
+	
+	requiredPlugins=core.getRequiredPlugins(dn)
+	for pluginName in requiredPlugins:
+		if pluginName != 'ogpdaemon':
+			print "Installing conf for plugin '" + pluginName + "'...",
+			try:
+				pluginClass = Plugin.getPluginFromName(pluginName)
+				pluginInstance = pluginClass(dn)
+				pluginInstance.installConf()
+				print "\033[0;32mOK\033[0m."
+				logging.info('Configuration installation for plugin %s successful.' % pluginName)
+			except KeyError:
+				print "\033[0;31mfailed\033[0m. Plugin '" + pluginName + "' is missing!"
+				logging.warning('Configuration installation for plugin %s failed. Plugin is missing!' % pluginName)
+			except:
+				print "\033[0;31mfailed\033[0m with %s." % sys.exc_info()[1]
+				logging.warning('Configuration installation for plugin %s failed with %s.' % (pluginName, sys.exc_info()[1]))
+						
+
+#getting options from command line
+(reload, loglevel) = parse_opts()
+
+#setting up logging
+logging.basicConfig(filename=LOG_FILE, level=loglevel, format='%(asctime)s %(levelname)-8s %(message)s')
+
+#getting local conf
+conf = load_conf()
+
+# Connection
+core = OgpCore(conf['uri'], conf['dn'], conf['passwd'])
+
+#loading plugins
+#should be done AFTER logging configuration
+from ogp.plugins import *
+
+#getting remote conf
+OgpDaemon  = Plugin.getPluginFromName('ogpdaemon')
+ogpdaemon  = OgpDaemon(conf['dn'])
+remoteConf = ogpdaemon.installConf()
+totalConf = conf.copy()
+for k in remoteConf:
+		totalConf[k] = remoteConf[k]
+
+#if remoteConf overrides uri, dn or passwd, save conf and reinitialize core
+for k in LOCAL_PARAMETERS:
+	if conf[k] != totalConf[k]:
+		save_conf(totalConf)
+		del core
+		core = OgpCore(totalConf['uri'], totalConf['dn'], totalConf['passwd'])
+		break
+
+conf = totalConf
+
+uri = conf['uri']
+dn = conf['dn']
+passwd = conf['passwd']
+updateOnStartup = bool(conf['updateOnStartup'])
+timeBetweenUpdates = int(conf['timeBetweenUpdates']) * 60
+
+if not updateOnStartup and not reload:
+	print "OGP Daemon has been disabled by remote configuration."
+	print "Run with --reload-conf to force"
+	logging.info("OGP Daemon has been disabled by remote configuration.")
+	exit(0)
+
+if reload:
+	installConf(core)
+else:
+	while True:
+		installConf(core)
+		sleep(timeBetweenUpdates)

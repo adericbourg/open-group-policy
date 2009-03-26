@@ -4,7 +4,7 @@
 from lxml.etree import *
 from elementmethods  import *
 from ogpxmlconsts import *
-import logging
+#import logging
 
 def parse(source, parser=None):
 	if not hasattr(source, "read"):
@@ -22,4 +22,4 @@ OGP_PARSER = XMLParser()
 OGP_PARSER.set_element_class_lookup(ElementDefaultClassLookup(element=OgpElement))
 Element = OGP_PARSER.makeelement
 
-logging.debug('Loaded ogp.etree.')
+#logging.debug('Loaded ogp.etree.')

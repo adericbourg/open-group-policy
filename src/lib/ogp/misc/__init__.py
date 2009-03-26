@@ -6,4 +6,4 @@ def smart_bool(s):
 		return s
 	else:
 		s = str(s).strip().lower()
-		return not s in ['false','f','n','0','']
+		return not s in ['false','f','n','no','0','']

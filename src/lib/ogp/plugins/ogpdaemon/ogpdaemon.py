@@ -52,13 +52,16 @@ class OgpDaemon(Plugin):
 		logging.debug('OgpDaemon.installConf()')
 		logging.info('OgpDaemon: retrieving conf.')
 
-		local = {}
-		remote = {}
+		conf = {}
+		#local params should not be returned if not set
 		for p in self.__localParams:
-			local[p] = self.__getParam(p, True)
+			c = self.__getParam(p, True)
+			if c is not None:
+				conf[p] = c
+		#remote param should be returned as default if not set
 		for p in self.__remoteParams:
-			remote[p] = self.__getParam(p, True)
-		return {'local':local,'remote':remote}
+			conf[p] = self.__getParam(p, True)
+		return conf
 
 	def __getParam(self, param, fullTree=False):
 		logging.debug('OgpDaemon.__getParam(param=' + repr(param) + ', fullTree=' + repr(fullTree) + ')')

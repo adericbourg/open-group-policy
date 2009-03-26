@@ -55,6 +55,10 @@ class OgpCore(object):
 		# Delegate access to implementation
 		return setattr(self.__instance, attr, value)
 
+	def __del__(self):
+		logging.debug('OgpCore.__del__()')
+		OgpCore.__instance = None
+
 	def getInstance():
 		"""
 			Returns the core unique instance
@@ -226,9 +230,9 @@ class OgpCore(object):
 				pluginConf: a XML tree reprensenting the XML configuration. Its root must be <plugin name="[pluginName]">
 			"""
 			logging.debug('OgpCore.__ogpcore.pushPluginConf(dn=' + repr(dn) + 'pluginConf=' + pluginConf.toString() + ')')
-			logging.info('OgpCore: pushing conf for plugin ' + pluginName + ' on ' + repr(dn) + '.')
 			#replace current <plugin name="..." /> entry
 			pluginName = pluginConf.get(OgpXmlConsts.ATTR_PLUGIN_NAME)
+			logging.info('OgpCore: pushing conf for plugin ' + pluginName + ' on ' + repr(dn) + '.')
 			currentConf = self.__pullConf(dn)
 			for p in currentConf:
 				if p.get(OgpXmlConsts.ATTR_PLUGIN_NAME) == pluginName:
@@ -316,6 +320,9 @@ class OgpCore(object):
 			logging.debug('OgpCore.__ogpcore.__pullConf(dn=' + repr(dn) + ')')
 			try:
 				return fromstring(self.pullAttributes(dn,[OgpLDAPConsts.ATTR_CONFIG])[OgpLDAPConsts.ATTR_CONFIG][0], OGP_PARSER)
+			except KeyError:
+				logging.info('OgpCore: no conf at dn=%s' % repr(dn))
+				return None
 			except:
 				logging.error('OgpCore: __pullConf failed with ' + repr(sys.exc_info()[1]) + '.')
 				raise
@@ -324,6 +331,9 @@ class OgpCore(object):
 			logging.debug('OgpCore.__ogpcore.__pullSOA(dn=' + repr(dn) + ')')
 			try:
 				return int(self.pullAttributes(dn, [OgpLDAPConsts.ATTR_OGPSOA])[OgpLDAPConsts.ATTR_OGPSOA][0])
+			except KeyError:
+				logging.info('OgpCore: no conf at dn=%s' % repr(dn))
+				return None
 			except:
 				logging.error('OgpCore: __pullSOA failed with ' + repr(sys.exc_info()[1]) + '.')
 				raise
