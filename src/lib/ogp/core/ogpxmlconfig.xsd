@@ -92,7 +92,7 @@
 														</xs:complexType>
 													</xs:element>
 													<xs:element name="conf">
-														<xs:complexType>
+														<xs:complexType mixed="true">
 															<xs:sequence minOccurs="0" maxOccurs="unbounded">
 																<xs:any processContents="skip"/>
 															</xs:sequence>
@@ -111,7 +111,7 @@
 								</xs:unique>
 							</xs:element>
 							<xs:element name="conf">
-								<xs:complexType>
+								<xs:complexType mixed="true">
 									<xs:sequence minOccurs="0" maxOccurs="unbounded">
 										<xs:any processContents="skip"/>
 									</xs:sequence>

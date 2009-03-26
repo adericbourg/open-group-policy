@@ -11,6 +11,10 @@ import logging
 import sys
 from hashlib import sha1
 from base64 import standard_b64encode
+from pkg_resources import resource_filename
+from os.path import dirname,join
+
+XML_SCHEMA="ogpxmlconfig.xsd"
 
 class OgpCore(object):
 	"""
@@ -80,6 +84,10 @@ class OgpCore(object):
 			logging.debug('OgpCore.__ogpcore.__init__(uri=' + repr(uri) + ', dn=' + repr(dn) + ', passwd=****, certs=[not implemented])')
 			self.l = ldap.initialize(uri)
 			self.l.simple_bind_s(dn, passwd)
+			path = dirname(resource_filename(__name__, '__init.py__'))
+			schema_f=open(join(path, XML_SCHEMA))
+			self.__schema = etree.XMLSchema(parse(schema_f))
+			close(f)
 
 		def __del__(self):
 			logging.debug('OgpCore.__ogpcore.__del__()')
@@ -239,6 +247,9 @@ class OgpCore(object):
 					currentConf.remove(p)
 					break
 			currentConf.append(pluginConf)
+			#validates against schema
+			if not self.__schema.validate(currentConf):
+				raise OgpCoreError('validation failed when pushing conf for plugin' + pluginName + '.')
 			strConf = currentConf.toString()
 
 			#get SOA
@@ -337,4 +348,15 @@ class OgpCore(object):
 			except:
 				logging.error('OgpCore: __pullSOA failed with ' + repr(sys.exc_info()[1]) + '.')
 				raise
+
+class OgpCoreError(Exception):
+				  """
+    OGP plugin error class.
+  """
+  def __init__(self, value):
+					    self.value = value
+    logging.error(str(self))
+
+  def __str__(self):
+					    return repr("OgpCoreError: " + self.value)
 
