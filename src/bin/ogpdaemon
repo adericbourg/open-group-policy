@@ -7,6 +7,7 @@ import sys
 from getopt import getopt
 import re
 from time import sleep
+import os
 
 LOG_FILE = '/var/log/ogpdaemon.log'
 CONF_FILE = '/etc/ogpdaemon.conf'
@@ -37,8 +38,6 @@ def checkSOAs():
 		pass
 	
 	currentSOAs = core.pullSOAs(dn)
-	print oldSOAs
-	print currentSOAs
 	if currentSOAs != oldSOAs:
 		f = open(SOAS_FILE, 'w')
 		lines = []
@@ -107,6 +106,9 @@ def load_conf():
 	return conf
 
 def save_conf(conf):
+	"""
+		Saves conf to local file.
+	"""
 	f = open(CONF_FILE, 'w')
 	lines = []
 	for k in conf:
@@ -116,63 +118,91 @@ def save_conf(conf):
 	f.close()
 
 def installConf(core):
+	"""
+		If LDAP SOAs changed since last time, pull conf from LDAP and install it on local machine
+	"""
 	# if SOAS didnt change, do't do anything
-	print checkSOAs()
 	if not checkSOAs():
 		logging.info("SOAs didn't change, so skipping configuration installation.")
+		if reload:
+			print "SOAs didn't change, so skipping configuration installation."
 		return
+	else:
+		logging.info("SOAs changed, installing conf...")
+		if reload:
+			print "SOAs changed, installing conf..."
 	
 	requiredPlugins=core.getRequiredPlugins(dn)
 	for pluginName in requiredPlugins:
-		if pluginName != 'ogpdaemon':
-			print "Installing conf for plugin '" + pluginName + "'...",
+		if pluginName != 'ogpdaemon': #skip ogpdaemon, because done before
+			if reload: 
+				print "Installing conf for plugin '" + pluginName + "'...",
 			try:
 				pluginClass = Plugin.getPluginFromName(pluginName)
 				pluginInstance = pluginClass(dn)
 				pluginInstance.installConf()
-				print "\033[0;32mOK\033[0m."
+				if reload: 
+					print "\033[0;32mOK\033[0m."
 				logging.info('Configuration installation for plugin %s successful.' % pluginName)
 			except KeyError:
-				print "\033[0;31mfailed\033[0m. Plugin '" + pluginName + "' is missing!"
+				if reload: 
+					print "\033[0;31mfailed\033[0m. Plugin '" + pluginName + "' is missing!"
 				logging.warning('Configuration installation for plugin %s failed. Plugin is missing!' % pluginName)
 			except:
-				print "\033[0;31mfailed\033[0m with %s." % sys.exc_info()[1]
+				if reload: 
+					print "\033[0;31mfailed\033[0m with %s." % sys.exc_info()[1]
 				logging.warning('Configuration installation for plugin %s failed with %s.' % (pluginName, sys.exc_info()[1]))
 						
 
+#initialization
 #getting options from command line
 (reload, loglevel) = parse_opts()
 
-#setting up logging
-logging.basicConfig(filename=LOG_FILE, level=loglevel, format='%(asctime)s %(levelname)-8s %(message)s')
+try:
+	#setting up logging
+	logging.basicConfig(filename=LOG_FILE, level=loglevel, format='%(asctime)s %(levelname)-8s %(message)s')
+	logging.info("OGP Daemon: Starting up...")
+	
+	#getting local conf
+	conf = load_conf()
+	
+	# Connection
+	core = OgpCore(conf['uri'], conf['dn'], conf['passwd'])
+	
+	#loading plugins
+	#should be done AFTER logging configuration
+	from ogp.plugins import *
+	
+	#getting remote conf
+	OgpDaemon  = Plugin.getPluginFromName('ogpdaemon')
+	ogpdaemon  = OgpDaemon(conf['dn'])
+	remoteConf = ogpdaemon.installConf()
+	totalConf = conf.copy()
+	for k in remoteConf:
+			totalConf[k] = remoteConf[k]
+	
+	#if remoteConf overrides uri, dn or passwd, save conf and reinitialize core
+	for k in LOCAL_PARAMETERS:
+		if conf[k] != totalConf[k]:
+			save_conf(totalConf)
+			del core
+			core = OgpCore(totalConf['uri'], totalConf['dn'], totalConf['passwd'])
+			break
+	
+	conf = totalConf
+except:
+	logging.error("OgpDaemon: startup failed with %s" % sys.exc_info()[1])
+	exit(1)
 
-#getting local conf
-conf = load_conf()
-
-# Connection
-core = OgpCore(conf['uri'], conf['dn'], conf['passwd'])
-
-#loading plugins
-#should be done AFTER logging configuration
-from ogp.plugins import *
-
-#getting remote conf
-OgpDaemon  = Plugin.getPluginFromName('ogpdaemon')
-ogpdaemon  = OgpDaemon(conf['dn'])
-remoteConf = ogpdaemon.installConf()
-totalConf = conf.copy()
-for k in remoteConf:
-		totalConf[k] = remoteConf[k]
-
-#if remoteConf overrides uri, dn or passwd, save conf and reinitialize core
-for k in LOCAL_PARAMETERS:
-	if conf[k] != totalConf[k]:
-		save_conf(totalConf)
-		del core
-		core = OgpCore(totalConf['uri'], totalConf['dn'], totalConf['passwd'])
-		break
-
-conf = totalConf
+if not reload:
+	try:
+		pid = os.fork()
+	except:
+		print "totopass"
+	
+	if pid != 0:
+		print pid
+		exit(0)
 
 uri = conf['uri']
 dn = conf['dn']
