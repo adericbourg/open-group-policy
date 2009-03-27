@@ -72,7 +72,7 @@ class Motd(Plugin):
 		logging.info('Motd: installing conf.')
 		motd = str(self.pullFile('motd', True))
 		dist_e = self.currentConf.xpath(self.__motd_xpath)
-		prefix = '/home/alban/tmp/ogp/etc/'
+		prefix = '/etc/'
 		if len(dist_e) != 0:
 			distro = dist_e[0].text
 		else:
