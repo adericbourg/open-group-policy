@@ -26,7 +26,7 @@ class OgpCore(object):
 			certs: path to certs files (.pem)
 		Usage: OgpCore.getInstance().[method]([args])
 	"""
-	
+
 	__instance = None
 
 	def __init__(self, uri, dn=None, passwd=None, certs=None):
@@ -70,7 +70,7 @@ class OgpCore(object):
 		logging.debug('OgpCore.getInstance()')
 		return OgpCore.__instance
 	getInstance = staticmethod(getInstance)
-	
+
 	class __ogpcore:
 
 		def	__init__(self, uri, dn=None, passwd=None, certs=None):
@@ -105,7 +105,7 @@ class OgpCore(object):
 				logging.info('OgpCore: creating organizational unit  ' + repr(dn) + '( ' + description + ')')
 			else:
 				logging.info('OgpCore: creating organizational unit  ' + repr(dn) + '.')
-			
+
 			attrs = others
 			attrs['objectclass'] = OgpLDAPConsts.OBJECTCLASS_OU
 			attrs[OgpLDAPConsts.ATTR_OGPSOA] = OgpLDAPConsts.VALUE_OGPSOA
@@ -127,11 +127,11 @@ class OgpCore(object):
 				logging.info('OgpCore: creating organizational unit  ' + repr(dn) + '( ' + description + ')')
 			else:
 				logging.info('OgpCore: creating organizational unit  ' + repr(dn) + '.')
-			
+
 			attrs = others
 			attrs['objectClass'] = OgpLDAPConsts.OBJECTCLASS_MACHINE
 			attrs[OgpLDAPConsts.ATTR_OGPSOA] = OgpLDAPConsts.VALUE_OGPSOA
-			
+
 			#default values for mandatory fields
 			try:
 				attrs[OgpLDAPConsts.ATTR_SAMACCOUNTNAME]
@@ -144,7 +144,7 @@ class OgpCore(object):
 			s=sha1()
 			s.update(passwd)
 			attrs[OgpLDAPConsts.ATTR_USERPASSWORD] = "{SHA}" + standard_b64encode(s.digest())
-			
+
 			attrs[OgpLDAPConsts.ATTR_CONFIG] = OgpLDAPConsts.VALUE_CONFIG
 			if description is not None:
 				attrs[OgpLDAPConsts.ATTR_DESCRIPTION] = description
@@ -228,7 +228,7 @@ class OgpCore(object):
 					pConf = self.__pullConf(dn).xpath(xpath_arg)[0]
 				except:
 					return None
-				
+
 			return pConf
 
 		def pushPluginConf(self, dn, pluginConf):
@@ -256,9 +256,9 @@ class OgpCore(object):
 			currentSOA = self.__pullSOA(dn)
 			#commit Changes
 			mods = [ 
-				(ldap.MOD_REPLACE, OgpLDAPConsts.ATTR_CONFIG, strConf),
-				(ldap.MOD_REPLACE, OgpLDAPConsts.ATTR_OGPSOA, str(currentSOA + 1))
-			]
+					(ldap.MOD_REPLACE, OgpLDAPConsts.ATTR_CONFIG, strConf),
+					(ldap.MOD_REPLACE, OgpLDAPConsts.ATTR_OGPSOA, str(currentSOA + 1))
+					]
 			self.__modify(dn, mods)
 
 		def pullSOAs(self, dn):
@@ -301,7 +301,7 @@ class OgpCore(object):
 					pass
 			plugins.sort()
 			return plugins
-		
+
 		def __add(self, dn, attrs):
 			logging.debug('OgpCore.__ogpcore.__add(dn=' + repr(dn) + ', attrs=' + repr(attrs) + ')')
 			try:
@@ -350,13 +350,13 @@ class OgpCore(object):
 				raise
 
 class OgpCoreError(Exception):
-				  """
-    OGP plugin error class.
+	"""
+	OGP plugin error class.
   """
   def __init__(self, value):
-					    self.value = value
-    logging.error(str(self))
+	  self.value = value
+	logging.error(str(self))
 
   def __str__(self):
-					    return repr("OgpCoreError: " + self.value)
+	  return repr("OgpCoreError: " + self.value)
 
