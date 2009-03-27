@@ -86,7 +86,7 @@ class OgpCore(object):
 			self.l.simple_bind_s(dn, passwd)
 			path = dirname(resource_filename(__name__, '__init.py__'))
 			schema_f=open(join(path, XML_SCHEMA))
-			self.__schema = etree.XMLSchema(parse(schema_f))
+			self.__schema = XMLSchema(parse(schema_f))
 			close(f)
 
 		def __del__(self):
