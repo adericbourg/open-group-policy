@@ -124,15 +124,16 @@ def installConf(core):
 		If LDAP SOAs changed since last time, pull conf from LDAP and install it on local machine
 	"""
 	# if SOAS didnt change, do't do anything
-	if not checkSOAs():
+	if not reload and not checkSOAs():
 		logging.info("SOAs didn't change, so skipping configuration installation.")
 		if reload:
 			print "SOAs didn't change, so skipping configuration installation."
 		return
 	else:
-		logging.info("SOAs changed, installing conf...")
 		if reload:
-			print "SOAs changed, installing conf..."
+			logging.info("--reload-conf, so forcing conf installation...")
+		else:
+			logging.info("SOAs changed, installing conf...")
 	
 	requiredPlugins=core.getRequiredPlugins(dn)
 	for pluginName in requiredPlugins:
@@ -194,6 +195,7 @@ try:
 	conf = totalConf
 except:
 	logging.error("OgpDaemon: startup failed with %s" % sys.exc_info()[1])
+	print "OgpDaemon: startup failed with %s" % sys.exc_info()[1]
 	exit(1)
 
 # if running as daemon, fork after initialization
