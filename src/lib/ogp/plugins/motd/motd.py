@@ -71,7 +71,7 @@ class Motd(Plugin):
 		logging.debug('Motd.installConf()')
 		logging.info('Motd: installing conf.')
 		motd = str(self.pullFile('motd', True))
-		dist_e = self.currentConf.xpath(self.__conf_xpath + '/conf')
+		dist_e = self.currentConf.xpath(self.__conf_xpath + '/distro')
 		if len(dist_e) != 0:
 			distro = dist_e[0].text
 		else:
