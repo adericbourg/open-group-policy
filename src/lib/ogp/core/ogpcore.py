@@ -351,12 +351,11 @@ class OgpCore(object):
 
 class OgpCoreError(Exception):
 	"""
-	OGP plugin error class.
-  """
-  def __init__(self, value):
-	  self.value = value
-	logging.error(str(self))
-
-  def __str__(self):
-	  return repr("OgpCoreError: " + self.value)
-
+		OGP plugin error class.
+	"""
+	def __init__(self, value):
+		self.value = value
+		logging.error(str(self))
+	
+	def __str__(self):
+		return repr("OgpCoreError: " + self.value)
