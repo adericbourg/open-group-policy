@@ -38,7 +38,7 @@ def checkSOAs():
 		f.close()
 	except:
 		pass
-	
+
 	currentSOAs = core.pullSOAs(dn)
 	if currentSOAs != oldSOAs:
 		f = open(SOAS_FILE, 'w')
@@ -61,7 +61,7 @@ def parse_opts():
 		usage()
 		sys.exit(2)
 	loglevels=[logging.INFO, logging.WARNING, logging.DEBUG]
-	
+
 	loglevel=0
 	reload=False
 
@@ -71,10 +71,10 @@ def parse_opts():
 			usage()
 			sys.exit()
 		elif opt in ['-v', '--verbose']:
-				loglevel = loglevel + 1
+			loglevel = loglevel + 1
 		elif opt in ['-r', '--reload-conf']:
 			reload = True
-		
+
 	if loglevel > 2:
 		loglevel = 2
 	return (reload, loglevels[loglevel])	
@@ -134,7 +134,7 @@ def installConf(core):
 			logging.info("--reload-conf, so forcing conf installation...")
 		else:
 			logging.info("SOAs changed, installing conf...")
-	
+
 	requiredPlugins=core.getRequiredPlugins(dn)
 	for pluginName in requiredPlugins:
 		if pluginName != 'ogpdaemon': #skip ogpdaemon, because done before
@@ -155,7 +155,7 @@ def installConf(core):
 				if reload: 
 					print "\033[0;31mfailed\033[0m with %s." % sys.exc_info()[1]
 				logging.warning('Configuration installation for plugin %s failed with %s.' % (pluginName, sys.exc_info()[1]))
-						
+
 
 #initialization before fork
 #getting options from command line
@@ -165,25 +165,25 @@ try:
 	#setting up logging
 	logging.basicConfig(filename=LOG_FILE, level=loglevel, format='%(asctime)s %(levelname)-8s %(message)s')
 	logging.info("OGP Daemon: Starting up...")
-	
+
 	#getting local conf
 	conf = load_conf()
-	
+
 	# Connection
 	core = OgpCore(conf['uri'], conf['dn'], conf['passwd'])
-	
+
 	#loading plugins
 	#should be done AFTER logging configuration
 	from ogp.plugins import *
-	
+
 	#getting remote conf
 	OgpDaemon  = Plugin.getPluginFromName('ogpdaemon')
 	ogpdaemon  = OgpDaemon(conf['dn'])
 	remoteConf = ogpdaemon.installConf()
 	totalConf = conf.copy()
 	for k in remoteConf:
-			totalConf[k] = remoteConf[k]
-	
+		totalConf[k] = remoteConf[k]
+
 	#if remoteConf overrides uri, dn or passwd, save conf and reinitialize core
 	for k in LOCAL_PARAMETERS:
 		if conf[k] != totalConf[k]:
@@ -191,7 +191,7 @@ try:
 			del core
 			core = OgpCore(totalConf['uri'], totalConf['dn'], totalConf['passwd'])
 			break
-	
+
 	conf = totalConf
 except:
 	logging.error("OgpDaemon: startup failed with %s" % sys.exc_info()[1])
