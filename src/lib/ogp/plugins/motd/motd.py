@@ -78,6 +78,8 @@ class Motd(Plugin):
 		else:
 			distro = None
 
+		print distro
+
 		if distro == 'debian':
 			f = open(prefix + 'motd.tail','w')
 			f.write(motd)
