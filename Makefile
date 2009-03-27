@@ -22,7 +22,7 @@ binaries:
 install: install-libs install-daemon
 
 install-libs:
-	@if [ ! -f $(PYTHON_LIB)/ogp ]; then \
+	@if [ ! -d $(PYTHON_LIB)/ogp ]; then \
 		mkdir $(PYTHON_LIB)/ogp;\
 	fi
 	@cd $(OGPLIB);\
