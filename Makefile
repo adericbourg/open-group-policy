@@ -14,6 +14,8 @@ INIT_SCRIPT_NAME=$(DAEMON_NAME)
 script_path=$(INITD)/$(INIT_SCRIPT_NAME)
 bin_path=$(SBIN)/$(DAEMON_NAME)
 
+CONFIG=/etc/ogpdaemon.conf
+
 all: binaries
 
 binaries:
@@ -45,7 +47,7 @@ install-daemon-bin:
 .PHONY: config clean mrproper 
 
 config:
-
+	$$EDITOR $(CONFIG)
 
 clean:
 	@echo "Removing .pyc files"
