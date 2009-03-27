@@ -71,14 +71,15 @@ class Motd(Plugin):
 		logging.debug('Motd.installConf()')
 		logging.info('Motd: installing conf.')
 		motd = str(self.pullFile('motd', True))
-		dist_e = self.currentConf.xpath(self.__motd_xpath)
-		prefix = '/etc/'
+		dist_e = self.currentConf.xpath(self.__conf_xpath)
 		if len(dist_e) != 0:
 			distro = dist_e[0].text
 		else:
 			distro = None
 
 		print distro
+		
+		prefix = '/etc/'
 
 		if distro == 'debian':
 			f = open(prefix + 'motd.tail','w')
