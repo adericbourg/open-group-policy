@@ -77,8 +77,6 @@ class Motd(Plugin):
 		else:
 			distro = None
 
-		print distro
-		
 		prefix = '/etc/'
 
 		if distro == 'debian':
