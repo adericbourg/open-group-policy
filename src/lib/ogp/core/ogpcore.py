@@ -87,7 +87,8 @@ class OgpCore(object):
 			path = dirname(resource_filename(__name__, '__init.py__'))
 			schema_f=open(join(path, XML_SCHEMA))
 			self.__schema = XMLSchema(parse(schema_f))
-			close(f)
+			#close(f)
+			f.close()
 
 		def __del__(self):
 			logging.debug('OgpCore.__ogpcore.__del__()')
