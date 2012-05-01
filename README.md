@@ -1,0 +1,1 @@
+Open Group Policy is a free portage of Microsoft Windows' GPO under Unix systems. Machines are grouped in organisational units as leaves of a tree (an OU may contain machines or other OU) and some configuration can be "pushed" to OUs (with a system of priorities to deal with conflicts). Such a tool allows sysadmins to administrate numerous machines easily, quickly and safely. 
